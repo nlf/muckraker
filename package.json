@@ -4,7 +4,7 @@
   "description": "a lightweight wrapper around pg-promise",
   "main": "lib/index.js",
   "scripts": {
-    "test": "lab -a code -L"
+    "test": "lab -a code -L -t 100"
   },
   "repository": {
     "type": "git",
