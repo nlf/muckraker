@@ -4,12 +4,6 @@ class MockPG {
   query(q) {
 
     switch (q) {
-      case 'SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\'':
-        return Promise.resolve([{ table_name: 'users' }]);
-        break;
-      case 'SELECT routine_name FROM information_schema.routines WHERE routine_schema = \'public\'':
-        return Promise.resolve([{ routine_name: 'users_self' }, { routine_name: 'something_random' }]);
-        break;
       case 'select * from "users"':
         return Promise.resolve([{ id: 0, user_name: 'test' }]);
         break;
@@ -78,6 +72,29 @@ class MockPG {
       default:
         return Promise.reject(new Error(`Unknown query: ${q}`));
     }
+  }
+
+  task(fn) {
+
+    return fn({
+      batch: function (results) {
+
+        return Promise.all(results);
+      },
+      query: function (q) {
+
+        switch (q) {
+          case 'SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\'':
+            return Promise.resolve([{ table_name: 'users' }]);
+            break;
+          case 'SELECT routine_name FROM information_schema.routines WHERE routine_schema = \'public\'':
+            return Promise.resolve([{ routine_name: 'users_self' }, { routine_name: 'something_random' }]);
+            break;
+          default:
+            return Promise.reject(new Error(`Unknown query: ${q}`));
+        };
+      }
+    });
   }
 }
 
