@@ -82,4 +82,4 @@ mr.connect().then((db) => {
 ```
 
 
-## Special thanks to [arb](https://github.com/arb) for coming up with the name
+### Special thanks to [arb](https://github.com/arb) for coming up with the name
