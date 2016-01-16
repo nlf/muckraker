@@ -1,0 +1,25 @@
+{
+  "name": "muckraker",
+  "version": "1.0.0",
+  "description": "a lightweight wrapper around pg-promise",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "lab -a code -L"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nlf/muckraker.git"
+  },
+  "keywords": [],
+  "author": "Nathan LaFreniere <quitlahok@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "knex": "^0.9.0",
+    "pg-promise": "^2.8.6"
+  },
+  "devDependencies": {
+    "code": "^2.1.0",
+    "eslint-config-andyet": "^1.0.0",
+    "lab": "^8.0.2"
+  }
+}
