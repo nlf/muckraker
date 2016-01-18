@@ -1,0 +1,56 @@
+#!/usr/bin/env node
+'use strict';
+
+const Muckraker = require('../');
+const Repl = require('repl');
+const Util = require('util');
+
+if (process.argv.length === 2) {
+  console.error('Usage: muckraker [database|connection string]');
+  process.exit(1);
+}
+
+const mr = new Muckraker({
+  connection: process.argv[2]
+});
+
+mr.connect().then((db) => {
+
+  console.log('Connected to %s', process.argv[2]);
+  const repl = Repl.start('muckraker> ');
+
+  // keep the db from holding the process open
+  repl.on('exit', () => {
+
+    process.exit();
+  });
+
+  // hijack the eval method to automatically resolve promises for us
+  const _eval = repl.eval;
+  repl.eval = function (cmd, context, filename, callback) {
+
+    _eval.call(repl, cmd, context, filename, function (err, res) {
+
+      if (err) {
+        return callback(err);
+      }
+
+      if (!res ||
+          typeof res.then !== 'function') {
+        
+        return callback(null, res);
+      }
+
+      res.then((val) => {
+
+        callback(null, val);
+      }).catch((err) => {
+
+        callback(err);
+      });
+    });
+  };
+
+  // attach the connected db
+  repl.context.db = db;
+});
