@@ -94,6 +94,10 @@ mr.connect().then((db) => {
 });
 ```
 
+## Validation
+
+Muckraker will also generate rough [joi](https://github.com/hapijs/joi) validators for your tables, they are accessible at `db.validators[tablename]`. Note, however that this feature is very preliminary at this point and won't be able to identify every single type of column. If you'd like to add support for additional types or constraints, modify the `internals.generateValidators` method in `lib/database.js` and send me a pull request.
+
 
 ## REPL
 
