@@ -1,13 +1,21 @@
 'use strict';
 
+const PG = require('pg-promise');
+
 class MockPG {
-  query(q) {
+  query(q, params, mask) {
 
     switch (q) {
       case 'select * from "users"':
+        if (mask === 5) {
+          return Promise.resolve({ id: 0, user_name: 'test' });
+        }
         return Promise.resolve([{ id: 0, user_name: 'test' }]);
         break;
       default:
+        if (q instanceof PG.QueryFile) {
+          return this.query(q.query, params, mask);
+        }
         return Promise.reject(new Error(`Unknown query: ${q}`));
     }
   }
@@ -63,11 +71,16 @@ class MockPG {
     }
   }
 
-  func(q) {
+  func(q, params, mask) {
 
     switch (q) {
       case 'users_self':
+      case 'something_random':
         return Promise.resolve([{ id: 0, user_name: 'test' }]);
+        break;
+      case 'one_item':
+      case 'users_one_person':
+        return Promise.resolve({ id: 0, user_name: 'test' });
         break;
       default:
         return Promise.reject(new Error(`Unknown query: ${q}`));
@@ -88,7 +101,7 @@ class MockPG {
             return Promise.resolve([{ table_name: 'users' }]);
             break;
           case 'SELECT routine_name FROM information_schema.routines WHERE routine_schema = \'public\'':
-            return Promise.resolve([{ routine_name: 'users_self' }, { routine_name: 'something_random' }]);
+            return Promise.resolve([{ routine_name: 'users_self' }, { routine_name: 'something_random' }, { routine_name: 'one_item' }, { routine_name: 'users_one_person' }]);
             break;
           default:
             return Promise.reject(new Error(`Unknown query: ${q}`));

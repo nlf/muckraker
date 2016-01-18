@@ -334,6 +334,30 @@ describe('scripts', () => {
     }).catch(done);
   });
 
+  it('can run a script that returns a single result', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection,
+      scriptDir: Path.join(__dirname, 'db')
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      expect(db).to.exist();
+      expect(db).to.be.an.instanceof(Database);
+      return db;
+    }).then((db) => {
+
+      return db.row();
+    }).then((user) => {
+
+      expect(user).to.be.an.object();
+      expect(user).to.contain(['id', 'user_name']);
+      done();
+    }).catch(done);
+  });
+
   it('can run a namespaced script', (done) => {
 
     const mr = new Muckraker({
@@ -357,6 +381,30 @@ describe('scripts', () => {
       done();
     }).catch(done);
   });
+
+  it('can run a namespaced script that returns a single result', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection,
+      scriptDir: Path.join(__dirname, 'db')
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      expect(db).to.exist();
+      expect(db).to.be.an.instanceof(Database);
+      return db;
+    }).then((db) => {
+
+      return db.users.leader();
+    }).then((user) => {
+
+      expect(user).to.be.an.object();
+      expect(user).to.contain(['id', 'user_name']);
+      done();
+    }).catch(done);
+  });
 });
 
 describe('routines', () => {
@@ -376,11 +424,83 @@ describe('routines', () => {
       return db;
     }).then((db) => {
 
+      return db.something_random();
+    }).then((users) => {
+
+      expect(users).to.be.an.array();
+      expect(users.length).to.equal(1);
+      done();
+    }).catch(done);
+  });
+
+  it('can run a routine that returns a single result', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection,
+      scriptDir: Path.join(__dirname, 'db')
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      expect(db).to.exist();
+      expect(db).to.be.an.instanceof(Database);
+      return db;
+    }).then((db) => {
+
+      return db.something_random();
+    }).then((users) => {
+
+      expect(users).to.be.an.array();
+      expect(users.length).to.equal(1);
+      done();
+    }).catch(done);
+  });
+
+  it('can run a scoped routine', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection,
+      scriptDir: Path.join(__dirname, 'db')
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      expect(db).to.exist();
+      expect(db).to.be.an.instanceof(Database);
+      return db;
+    }).then((db) => {
+
       return db.users.self();
     }).then((users) => {
 
       expect(users).to.be.an.array();
       expect(users.length).to.equal(1);
+      done();
+    }).catch(done);
+  });
+
+  it('can run a scoped routine that returns a single result', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection,
+      scriptDir: Path.join(__dirname, 'db')
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      expect(db).to.exist();
+      expect(db).to.be.an.instanceof(Database);
+      return db;
+    }).then((db) => {
+
+      return db.users.person();
+    }).then((user) => {
+
+      expect(user).to.be.an.object();
+      expect(user).to.contain(['id', 'user_name']);
       done();
     }).catch(done);
   });

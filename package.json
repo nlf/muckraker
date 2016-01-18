@@ -15,7 +15,7 @@
   "license": "MIT",
   "dependencies": {
     "knex": "^0.9.0",
-    "pg-promise": "^2.8.6"
+    "pg-promise": "^2.9.0"
   },
   "devDependencies": {
     "code": "^2.1.0",
