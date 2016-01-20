@@ -77,7 +77,7 @@ describe('query', () => {
       return db;
     }).then((db) => {
 
-      return db.query('select * from "users"');
+      return db.query('SELECT * FROM users');
     }).then((users) => {
 
       expect(users).to.be.an.array();
@@ -126,7 +126,30 @@ describe('find', () => {
       return db;
     }).then((db) => {
 
-      return db.users.find({ id: 0 });
+      return db.users.find({ id: 0, invalid: 'key' });
+    }).then((users) => {
+
+      expect(users).to.be.an.array();
+      expect(users.length).to.equal(1);
+      done();
+    }).catch(done);
+  });
+
+  it('can find rows in a table with a condition in a json column', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      expect(db).to.exist();
+      expect(db).to.be.an.instanceof(Database);
+      return db;
+    }).then((db) => {
+
+      return db.users.find({ blob: { test: 'object' } });
     }).then((users) => {
 
       expect(users).to.be.an.array();
@@ -201,7 +224,7 @@ describe('insert', () => {
       return db;
     }).then((db) => {
 
-      return db.users.insert({ id: 0, user_name: 'test' });
+      return db.users.insert({ id: 0, invalid: 'key', user_name: 'test', blob: { some: 'data' } });
     }).then((user) => {
 
       expect(user).to.be.an.object();
@@ -272,7 +295,30 @@ describe('update', () => {
       return db;
     }).then((db) => {
 
-      return db.users.update({ id: 0 }, { user_name: 'test_user' });
+      return db.users.update({ id: 0, invalid: 'key', blob: { some: 'thing' } }, { user_name: 'test_user', invalid: 'key', blob: { another: 'thing' } });
+    }).then((users) => {
+
+      expect(users).to.be.an.array();
+      expect(users.length).to.equal(1);
+      done();
+    }).catch(done);
+  });
+
+  it('can update a row without a query', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      expect(db).to.exist();
+      expect(db).to.be.an.instanceof(Database);
+      return db;
+    }).then((db) => {
+
+      return db.users.update(null, { user_name: 'test_user' });
     }).then((users) => {
 
       expect(users).to.be.an.array();
@@ -299,6 +345,29 @@ describe('updateOne', () => {
     }).then((db) => {
 
       return db.users.updateOne({ id: 0 }, { user_name: 'test_user' });
+    }).then((user) => {
+
+      expect(user).to.be.an.object();
+      expect(user).to.contain(['id', 'user_name']);
+      done();
+    }).catch(done);
+  });
+
+  it('can update a row without a query', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      expect(db).to.exist();
+      expect(db).to.be.an.instanceof(Database);
+      return db;
+    }).then((db) => {
+
+      return db.users.updateOne(null, { user_name: 'test_user' });
     }).then((user) => {
 
       expect(user).to.be.an.object();

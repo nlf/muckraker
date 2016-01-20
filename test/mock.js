@@ -6,7 +6,7 @@ class MockPG {
   query(q, params, mask) {
 
     switch (q) {
-      case 'select * from "users"':
+      case 'SELECT * FROM users':
         if (mask === 5) {
           return Promise.resolve({ id: 0, user_name: 'test' });
         }
@@ -20,54 +20,66 @@ class MockPG {
     }
   }
 
-  any(q) {
+  any(q, p) {
 
-    switch (q) {
-      case 'select * from "users"':
+    const query = PG.as.format(q, p);
+    switch (query) {
+      case 'SELECT * FROM users':
         return Promise.resolve([{ id: 0, user_name: 'test' }]);
         break;
-      case 'select * from "users" where "id" = \'0\'':
+      case 'SELECT * FROM users WHERE id=0':
         return Promise.resolve([{ id: 0, user_name: 'test' }]);
         break;
-      case 'update "users" set "user_name" = \'test_user\' where "id" = \'0\' returning *':
+      case 'UPDATE users SET (user_name, blob) = (\'test_user\', \'{"another":"thing"}\') WHERE id=0 AND blob=\'{"some":"thing"}\' RETURNING *':
+        return Promise.resolve([{ id: 0, user_name: 'test_user' }]);
+        break;
+      case 'UPDATE users SET (user_name) = (\'test_user\') RETURNING *':
+        return Promise.resolve([{ id: 0, user_name: 'test_user' }]);
+        break;
+      case 'SELECT * FROM users WHERE blob=\'{"test":"object"}\'':
         return Promise.resolve([{ id: 0, user_name: 'test_user' }]);
         break;
       default:
-        return Promise.reject(new Error(`Unknown query: ${q}`));
+        return Promise.reject(new Error(`Unknown query: ${query}`));
     }
   }
 
-  one(q) {
+  one(q, p) {
 
-    switch (q) {
-      case 'select * from "users"':
+    const query = PG.as.format(q, p);
+    switch (query) {
+      case 'SELECT * FROM users':
         return Promise.resolve({ id: 0, user_name: 'test' });
         break;
-      case 'select * from "users" where "id" = \'0\'':
+      case 'SELECT * FROM users WHERE id=0':
         return Promise.resolve({ id: 0, user_name: 'test' });
         break;
-      case 'insert into "users" ("id", "user_name") values (\'0\', \'test\') returning *':
+      case 'INSERT INTO users (id, user_name, blob) VALUES (0, \'test\', \'{"some":"data"}\') RETURNING *':
         return Promise.resolve({ id: 0, user_name: 'test' });
         break;
-      case 'update "users" set "user_name" = \'test_user\' where "id" = \'0\' returning *':
+      case 'UPDATE users SET (user_name) = (\'test_user\') WHERE id=0 RETURNING *':
+        return Promise.resolve({ id: 0, user_name: 'test_user' });
+        break;
+      case 'UPDATE users SET (user_name) = (\'test_user\') RETURNING *':
         return Promise.resolve({ id: 0, user_name: 'test_user' });
         break;
       default:
-        return Promise.reject(new Error(`Unknown query: ${q}`));
+        return Promise.reject(new Error(`Unknown query: ${query}`));
     }
   }
 
-  none(q) {
+  none(q, p) {
 
-    switch (q) {
-      case 'delete from "users"':
+    const query = PG.as.format(q, p);
+    switch (query) {
+      case 'DELETE FROM users':
         return Promise.resolve();
         break;
-      case 'delete from "users" where "id" = \'0\'':
+      case 'DELETE FROM users WHERE id=0':
         return Promise.resolve();
         break;
       default:
-        return Promise.reject(new Error(`Unknown query: ${q}`));
+        return Promise.reject(new Error(`Unknown query: ${query}`));
     }
   }
 

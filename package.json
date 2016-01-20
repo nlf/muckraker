@@ -18,7 +18,6 @@
   "license": "MIT",
   "dependencies": {
     "joi": "^7.2.1",
-    "knex": "^0.9.0",
     "pg-promise": "^2.9.0"
   },
   "devDependencies": {

@@ -17,7 +17,14 @@ const mr = new Muckraker({
 mr.connect().then((db) => {
 
   console.log('Connected to %s', process.argv[2]);
-  const repl = Repl.start('muckraker> ');
+  const repl = Repl.start({
+    prompt: 'muckraker> ',
+    useGlobal: true,
+    writer: function (obj) {
+
+      return Util.inspect(obj, false, null, repl.useColors);
+    }
+  });
 
   // keep the db from holding the process open
   repl.on('exit', () => {
