@@ -77,7 +77,7 @@ describe('query', () => {
       return db;
     }).then((db) => {
 
-      return db.query('SELECT * FROM users');
+      return db.query('SELECT * FROM "users"');
     }).then((users) => {
 
       expect(users).to.be.an.array();

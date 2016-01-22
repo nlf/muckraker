@@ -6,7 +6,7 @@ class MockPG {
   query(q, params, mask) {
 
     switch (q) {
-      case 'SELECT * FROM users':
+      case 'SELECT * FROM "users"':
         if (mask === 5) {
           return Promise.resolve({ id: 0, user_name: 'test' });
         }
@@ -24,19 +24,19 @@ class MockPG {
 
     const query = PG.as.format(q, p);
     switch (query) {
-      case 'SELECT * FROM users':
+      case 'SELECT * FROM "users"':
         return Promise.resolve([{ id: 0, user_name: 'test' }]);
         break;
-      case 'SELECT * FROM users WHERE id=0':
+      case 'SELECT * FROM "users" WHERE "id"=0':
         return Promise.resolve([{ id: 0, user_name: 'test' }]);
         break;
-      case 'UPDATE users SET (user_name, blob) = (\'test_user\', \'{"another":"thing"}\') WHERE id=0 AND blob=\'{"some":"thing"}\' RETURNING *':
+      case 'UPDATE "users" SET ("user_name", "blob") = (\'test_user\', \'{"another":"thing"}\') WHERE "id"=0 AND "blob"=\'{"some":"thing"}\' RETURNING *':
         return Promise.resolve([{ id: 0, user_name: 'test_user' }]);
         break;
-      case 'UPDATE users SET (user_name) = (\'test_user\') RETURNING *':
+      case 'UPDATE "users" SET ("user_name") = (\'test_user\') RETURNING *':
         return Promise.resolve([{ id: 0, user_name: 'test_user' }]);
         break;
-      case 'SELECT * FROM users WHERE blob=\'{"test":"object"}\'':
+      case 'SELECT * FROM "users" WHERE "blob"=\'{"test":"object"}\'':
         return Promise.resolve([{ id: 0, user_name: 'test_user' }]);
         break;
       default:
@@ -48,19 +48,19 @@ class MockPG {
 
     const query = PG.as.format(q, p);
     switch (query) {
-      case 'SELECT * FROM users':
+      case 'SELECT * FROM "users"':
         return Promise.resolve({ id: 0, user_name: 'test' });
         break;
-      case 'SELECT * FROM users WHERE id=0':
+      case 'SELECT * FROM "users" WHERE "id"=0':
         return Promise.resolve({ id: 0, user_name: 'test' });
         break;
-      case 'INSERT INTO users (id, user_name, blob) VALUES (0, \'test\', \'{"some":"data"}\') RETURNING *':
+      case 'INSERT INTO "users" ("id", "user_name", "blob") VALUES (0, \'test\', \'{"some":"data"}\') RETURNING *':
         return Promise.resolve({ id: 0, user_name: 'test' });
         break;
-      case 'UPDATE users SET (user_name) = (\'test_user\') WHERE id=0 RETURNING *':
+      case 'UPDATE "users" SET ("user_name") = (\'test_user\') WHERE "id"=0 RETURNING *':
         return Promise.resolve({ id: 0, user_name: 'test_user' });
         break;
-      case 'UPDATE users SET (user_name) = (\'test_user\') RETURNING *':
+      case 'UPDATE "users" SET ("user_name") = (\'test_user\') RETURNING *':
         return Promise.resolve({ id: 0, user_name: 'test_user' });
         break;
       default:
@@ -72,10 +72,10 @@ class MockPG {
 
     const query = PG.as.format(q, p);
     switch (query) {
-      case 'DELETE FROM users':
+      case 'DELETE FROM "users"':
         return Promise.resolve();
         break;
-      case 'DELETE FROM users WHERE id=0':
+      case 'DELETE FROM "users" WHERE "id"=0':
         return Promise.resolve();
         break;
       default:
