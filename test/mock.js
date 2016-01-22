@@ -68,6 +68,11 @@ class MockPG {
     }
   }
 
+  oneOrNone() {
+
+    return this.one.apply(this, arguments);
+  }
+
   none(q, p) {
 
     const query = PG.as.format(q, p);
