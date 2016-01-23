@@ -36,24 +36,46 @@ mr.connect().then((db) => {
   const _eval = repl.eval;
   repl.eval = function (cmd, context, filename, callback) {
 
-    _eval.call(repl, cmd, context, filename, function (err, res) {
+    // hijack const and let expressions so we can make sure they attach to our context
+    cmd = cmd.replace(/^\s*(const|let)\s*/, ' var ');
 
-      if (err) {
-        return callback(err);
+    // iterate through the context and resolve any promises
+    let resolved = Promise.resolve();
+    for (const key in context) {
+      if (context[key] &&
+          typeof context[key].then === 'function') {
+
+        resolved = resolved.then(() => {
+
+          return context[key];
+        }).then((val) => {
+
+          context[key] = val;
+        });
       }
+    }
 
-      if (!res ||
-          typeof res.then !== 'function') {
-        
-        return callback(null, res);
-      }
+    resolved.then(() => {
 
-      res.then((val) => {
+      _eval.call(repl, cmd, context, filename, (err, res) => {
 
-        callback(null, val);
-      }).catch((err) => {
+        if (err) {
+          return callback(err);
+        }
 
-        callback(err);
+        if (!res ||
+            typeof res.then !== 'function') {
+
+          return callback(null, res);
+        }
+
+        res.then((val) => {
+
+          callback(null, val);
+        }).catch((err) => {
+
+          callback(err);
+        });
       });
     });
   };
