@@ -40,6 +40,10 @@ class MockPG {
         return Promise.resolve([{ id: 0, user_name: 'test_user' }]);
         break;
       default:
+        const update = /^UPDATE "entries" SET \("value", "updated_at"\) = \('different test', '([^\)]+)'\) WHERE "value"='test' RETURNING \*$/.exec(query);
+        if (update) {
+          return Promise.resolve([{ value: 'different test', updated_at: new Date(update[1]) }]);
+        }
         return Promise.reject(new Error(`Unknown query: ${query}`));
     }
   }
@@ -64,6 +68,10 @@ class MockPG {
         return Promise.resolve({ id: 0, user_name: 'test_user' });
         break;
       default:
+        const insert = /^INSERT INTO "entries" \("value", "created_at", "updated_at"\) VALUES \('test', '([^\)]+)', '([^\)]+)'\) RETURNING \*$/.exec(query);
+        if (insert) {
+          return Promise.resolve({ value: 'test', created_at: new Date(insert[1]), updated_at: new Date(insert[2]) });
+        }
         return Promise.reject(new Error(`Unknown query: ${query}`));
     }
   }
@@ -121,7 +129,10 @@ class MockPG {
               { table_name: 'users', column_name: 'blob', data_type: 'jsonb', column_default: null, is_nullable: 'YES' },
               { table_name: 'users', column_name: 'created', data_type: 'timestamp with time zone', column_default: null, is_nullable: 'YES' },
               { table_name: 'users', column_name: 'pets', data_type: 'integer', column_default: null, is_nullable: 'NO' },
-              { table_name: 'users', column_name: 'unknown', data_type: 'something else', column_default: null, is_nullable: 'YES' }
+              { table_name: 'users', column_name: 'unknown', data_type: 'something else', column_default: null, is_nullable: 'YES' },
+              { table_name: 'entries', column_name: 'created_at', data_type: 'timestamp with time zone', column_default: null, is_nullable: 'YES' },
+              { table_name: 'entries', column_name: 'updated_at', data_type: 'timestamp with time zone', column_default: null, is_nullable: 'YES' },
+              { table_name: 'entries', column_name: 'value', data_type: 'text', column_default: null, is_nullable: 'YES' }
             ]);
             break;
           case 'SELECT routine_name FROM information_schema.routines WHERE routine_schema = \'public\'':

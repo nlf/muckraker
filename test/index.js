@@ -232,6 +232,31 @@ describe('insert', () => {
       done();
     }).catch(done);
   });
+
+  it('can set created_at and updated_at implicitly when creating a row', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      expect(db).to.exist();
+      expect(db).to.be.an.instanceof(Database);
+      return db;
+    }).then((db) => {
+
+      return db.entries.insert({ value: 'test' });
+    }).then((entry) => {
+
+      expect(entry).to.be.an.object();
+      expect(entry).to.contain('created_at', 'updated_at', 'value');
+      expect(entry.created_at).to.not.equal(null);
+      expect(entry.updated_at).to.not.equal(null);
+      done();
+    }).catch(done);
+  });
 });
 
 describe('destroy', () => {
@@ -323,6 +348,30 @@ describe('update', () => {
 
       expect(users).to.be.an.array();
       expect(users.length).to.equal(1);
+      done();
+    }).catch(done);
+  });
+
+  it('can set the updated_at column implicitly if it exists', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      expect(db).to.exist();
+      expect(db).to.be.an.instanceof(Database);
+      return db;
+    }).then((db) => {
+
+      return db.entries.update({ value: 'test' }, { value: 'different test' });
+    }).then((entries) => {
+
+      expect(entries).to.be.an.array();
+      expect(entries.length).to.equal(1);
+      expect(entries[0].updated_at).to.not.equal(null);
       done();
     }).catch(done);
   });
