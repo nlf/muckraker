@@ -17,7 +17,6 @@
   "author": "Nathan LaFreniere <quitlahok@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "joi": "^7.2.1",
     "pg-promise": "^3.1.2"
   },
   "devDependencies": {
