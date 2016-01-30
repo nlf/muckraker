@@ -72,16 +72,10 @@ describe('query', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.query('SELECT * FROM "users"');
-    }).then((users) => {
+    }).then((query) => {
 
-      expect(users).to.be.an.array();
-      expect(users.length).to.equal(1);
+      expect(query).to.equal('SELECT * FROM "users"');
       done();
     }).catch(done);
   });
@@ -98,16 +92,10 @@ describe('find', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.users.find();
-    }).then((users) => {
+    }).then((query) => {
 
-      expect(users).to.be.an.array();
-      expect(users.length).to.equal(1);
+      expect(query).to.equal('SELECT * FROM "users"');
       done();
     }).catch(done);
   });
@@ -121,16 +109,10 @@ describe('find', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.users.find({ id: 0, invalid: 'key' });
-    }).then((users) => {
+    }).then((query) => {
 
-      expect(users).to.be.an.array();
-      expect(users.length).to.equal(1);
+      expect(query).to.equal('SELECT * FROM "users" WHERE "id" = 0');
       done();
     }).catch(done);
   });
@@ -144,16 +126,214 @@ describe('find', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.users.find({ blob: { test: 'object' } });
-    }).then((users) => {
+    }).then((query) => {
 
-      expect(users).to.be.an.array();
-      expect(users.length).to.equal(1);
+      expect(query).to.equal('SELECT * FROM "users" WHERE "blob" = \'{"test":"object"}\'');
+      done();
+    }).catch(done);
+  });
+
+  it('can find rows in a table with a column that is null', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      return db.users.find({ unknown: null });
+    }).then((query) => {
+
+      expect(query).to.equal('SELECT * FROM "users" WHERE "unknown" IS NULL');
+      done();
+    }).catch(done);
+  });
+
+  it('can find rows in a table with a column that is explicitly null', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      return db.users.find({ unknown: { $eq: null } });
+    }).then((query) => {
+
+      expect(query).to.equal('SELECT * FROM "users" WHERE "unknown" IS NULL');
+      done();
+    }).catch(done);
+  });
+
+  it('can find rows in a table with a column that is not null', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      return db.users.find({ unknown: { $ne: null } });
+    }).then((query) => {
+
+      expect(query).to.equal('SELECT * FROM "users" WHERE "unknown" IS NOT NULL');
+      done();
+    }).catch(done);
+  });
+
+  it('can use the $gt operator', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      return db.users.find({ pets: { $gt: 1 } });
+    }).then((query) => {
+
+      expect(query).to.equal('SELECT * FROM "users" WHERE "pets" > 1');
+      done();
+    }).catch(done);
+  });
+
+  it('can use the $gte operator', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      return db.users.find({ pets: { $gte: 1 } });
+    }).then((query) => {
+
+      expect(query).to.equal('SELECT * FROM "users" WHERE "pets" >= 1');
+      done();
+    }).catch(done);
+  });
+
+  it('can use the $lt operator', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      return db.users.find({ pets: { $lt: 1 } });
+    }).then((query) => {
+
+      expect(query).to.equal('SELECT * FROM "users" WHERE "pets" < 1');
+      done();
+    }).catch(done);
+  });
+
+  it('can use the $lte operator', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      return db.users.find({ pets: { $lte: 1 } });
+    }).then((query) => {
+
+      expect(query).to.equal('SELECT * FROM "users" WHERE "pets" <= 1');
+      done();
+    }).catch(done);
+  });
+
+  it('can use the $ne operator', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      return db.users.find({ pets: { $ne: 1 } });
+    }).then((query) => {
+
+      expect(query).to.equal('SELECT * FROM "users" WHERE "pets" != 1');
+      done();
+    }).catch(done);
+  });
+
+  it('can use the $eq operator', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      return db.users.find({ pets: { $eq: 1 } });
+    }).then((query) => {
+
+      expect(query).to.equal('SELECT * FROM "users" WHERE "pets" = 1');
+      done();
+    }).catch(done);
+  });
+
+  it('can use the $in operator', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      return db.users.find({ pets: { $in: [1, 2, 3] } });
+    }).then((query) => {
+
+      expect(query).to.equal('SELECT * FROM "users" WHERE "pets" IN array[1,2,3]');
+      done();
+    }).catch(done);
+  });
+
+  it('can use the $like operator', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      return db.users.find({ user_name: { $like: 'test' } });
+    }).then((query) => {
+
+      expect(query).to.equal('SELECT * FROM "users" WHERE "user_name" LIKE \'test\'');
+      done();
+    }).catch(done);
+  });
+
+  it('can use the $nlike operator', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      return db.users.find({ user_name: { $nlike: 'test' } });
+    }).then((query) => {
+
+      expect(query).to.equal('SELECT * FROM "users" WHERE "user_name" NOT LIKE \'test\'');
       done();
     }).catch(done);
   });
@@ -170,16 +350,10 @@ describe('findOne', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.users.findOne();
-    }).then((user) => {
+    }).then((query) => {
 
-      expect(user).to.be.an.object();
-      expect(user).to.contain(['id', 'user_name']);
+      expect(query).to.equal('SELECT * FROM "users"');
       done();
     }).catch(done);
   });
@@ -193,16 +367,10 @@ describe('findOne', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.users.findOne({ id: 0 });
-    }).then((user) => {
+    }).then((query) => {
 
-      expect(user).to.be.an.object();
-      expect(user).to.contain(['id', 'user_name']);
+      expect(query).to.equal('SELECT * FROM "users" WHERE "id" = 0');
       done();
     }).catch(done);
   });
@@ -219,16 +387,10 @@ describe('insert', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.users.insert({ id: 0, invalid: 'key', user_name: 'test', blob: { some: 'data' } });
-    }).then((user) => {
+    }).then((query) => {
 
-      expect(user).to.be.an.object();
-      expect(user).to.contain(['id', 'user_name']);
+      expect(query).to.equal('INSERT INTO "users" ("id", "user_name", "blob") VALUES (0, \'test\', \'{"some":"data"}\') RETURNING *');
       done();
     }).catch(done);
   });
@@ -242,18 +404,10 @@ describe('insert', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.entries.insert({ value: 'test' });
-    }).then((entry) => {
+    }).then((query) => {
 
-      expect(entry).to.be.an.object();
-      expect(entry).to.contain('created_at', 'updated_at', 'value');
-      expect(entry.created_at).to.not.equal(null);
-      expect(entry.updated_at).to.not.equal(null);
+      expect(query).to.match(/^INSERT INTO "entries" \("value", "created_at", "updated_at"\) VALUES \('test', '([^\)]+)', '([^\)]+)'\) RETURNING \*$/);
       done();
     }).catch(done);
   });
@@ -270,14 +424,10 @@ describe('destroy', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.users.destroy();
-    }).then(() => {
+    }).then((query) => {
 
+      expect(query).to.equal('DELETE FROM "users"');
       done();
     }).catch(done);
   });
@@ -291,14 +441,27 @@ describe('destroy', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.users.destroy({ id: 0 });
-    }).then(() => {
+    }).then((query) => {
 
+      expect(query).to.equal('DELETE FROM "users" WHERE "id" = 0');
+      done();
+    }).catch(done);
+  });
+
+  it('can soft delete a row', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      return db.entries.destroy({ id: 0 });
+    }).then((query) => {
+
+      expect(query).to.match(/UPDATE "entries" SET \("deleted_at"\) VALUES \('([^\)]+)'\) WHERE "id" = 0/);
       done();
     }).catch(done);
   });
@@ -315,16 +478,10 @@ describe('update', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.users.update({ id: 0, invalid: 'key', blob: { some: 'thing' } }, { user_name: 'test_user', invalid: 'key', blob: { another: 'thing' } });
-    }).then((users) => {
+    }).then((query) => {
 
-      expect(users).to.be.an.array();
-      expect(users.length).to.equal(1);
+      expect(query).to.equal('UPDATE "users" SET ("user_name", "blob") = (\'test_user\', \'{"another":"thing"}\') WHERE "id" = 0 AND "blob" = \'{"some":"thing"}\' RETURNING *');
       done();
     }).catch(done);
   });
@@ -338,16 +495,10 @@ describe('update', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.users.update(null, { user_name: 'test_user' });
-    }).then((users) => {
+    }).then((query) => {
 
-      expect(users).to.be.an.array();
-      expect(users.length).to.equal(1);
+      expect(query).to.equal('UPDATE "users" SET ("user_name") = (\'test_user\') RETURNING *');
       done();
     }).catch(done);
   });
@@ -361,17 +512,10 @@ describe('update', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.entries.update({ value: 'test' }, { value: 'different test' });
-    }).then((entries) => {
+    }).then((query) => {
 
-      expect(entries).to.be.an.array();
-      expect(entries.length).to.equal(1);
-      expect(entries[0].updated_at).to.not.equal(null);
+      expect(query).to.match(/^UPDATE "entries" SET \("value", "updated_at"\) = \('different test', '([^\)]+)'\) WHERE "value" = 'test' RETURNING \*$/);
       done();
     }).catch(done);
   });
@@ -388,16 +532,10 @@ describe('updateOne', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.users.updateOne({ id: 0 }, { user_name: 'test_user' });
-    }).then((user) => {
+    }).then((query) => {
 
-      expect(user).to.be.an.object();
-      expect(user).to.contain(['id', 'user_name']);
+      expect(query).to.equal('UPDATE "users" SET ("user_name") = (\'test_user\') WHERE "id" = 0 RETURNING *');
       done();
     }).catch(done);
   });
@@ -411,16 +549,10 @@ describe('updateOne', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.users.updateOne(null, { user_name: 'test_user' });
-    }).then((user) => {
+    }).then((query) => {
 
-      expect(user).to.be.an.object();
-      expect(user).to.contain(['id', 'user_name']);
+      expect(query).to.equal('UPDATE "users" SET ("user_name") = (\'test_user\') RETURNING *');
       done();
     }).catch(done);
   });
@@ -438,16 +570,10 @@ describe('scripts', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.another_thing();
-    }).then((users) => {
+    }).then((query) => {
 
-      expect(users).to.be.an.array();
-      expect(users.length).to.equal(1);
+      expect(query).to.equal('SELECT * FROM "users"');
       done();
     }).catch(done);
   });
@@ -462,16 +588,10 @@ describe('scripts', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.row();
-    }).then((user) => {
+    }).then((query) => {
 
-      expect(user).to.be.an.object();
-      expect(user).to.contain(['id', 'user_name']);
+      expect(query).to.equal('SELECT * FROM "users"');
       done();
     }).catch(done);
   });
@@ -486,16 +606,10 @@ describe('scripts', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.users.random();
-    }).then((users) => {
+    }).then((query) => {
 
-      expect(users).to.be.an.array();
-      expect(users.length).to.equal(1);
+      expect(query).to.equal('SELECT * FROM "users"');
       done();
     }).catch(done);
   });
@@ -510,16 +624,10 @@ describe('scripts', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.users.leader();
-    }).then((user) => {
+    }).then((query) => {
 
-      expect(user).to.be.an.object();
-      expect(user).to.contain(['id', 'user_name']);
+      expect(query).to.equal('SELECT * FROM "users"');
       done();
     }).catch(done);
   });
@@ -537,40 +645,10 @@ describe('routines', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.something_random();
-    }).then((users) => {
+    }).then((query) => {
 
-      expect(users).to.be.an.array();
-      expect(users.length).to.equal(1);
-      done();
-    }).catch(done);
-  });
-
-  it('can run a routine that returns a single result', (done) => {
-
-    const mr = new Muckraker({
-      connection: internals.connection,
-      scriptDir: Path.join(__dirname, 'db')
-    });
-
-    mr.db = new Mock();
-    mr.connect().then((db) => {
-
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
-      return db.something_random();
-    }).then((users) => {
-
-      expect(users).to.be.an.array();
-      expect(users.length).to.equal(1);
+      expect(query.q).to.equal('something_random');
       done();
     }).catch(done);
   });
@@ -585,16 +663,10 @@ describe('routines', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.users.self();
-    }).then((users) => {
+    }).then((query) => {
 
-      expect(users).to.be.an.array();
-      expect(users.length).to.equal(1);
+      expect(query.q).to.equal('users_self');
       done();
     }).catch(done);
   });
@@ -609,16 +681,10 @@ describe('routines', () => {
     mr.db = new Mock();
     mr.connect().then((db) => {
 
-      expect(db).to.exist();
-      expect(db).to.be.an.instanceof(Database);
-      return db;
-    }).then((db) => {
-
       return db.users.person();
-    }).then((user) => {
+    }).then((query) => {
 
-      expect(user).to.be.an.object();
-      expect(user).to.contain(['id', 'user_name']);
+      expect(query.q).to.equal('users_one_person');
       done();
     }).catch(done);
   });
