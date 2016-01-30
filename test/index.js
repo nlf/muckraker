@@ -100,6 +100,57 @@ describe('find', () => {
     }).catch(done);
   });
 
+  it('adds a filter for tables with a deleted_at column', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      return db.entries.find();
+    }).then((query) => {
+
+      expect(query).to.equal('SELECT * FROM "entries" WHERE "deleted_at" IS NULL');
+      done();
+    }).catch(done);
+  });
+
+  it('allows overriding the default filter for tables with a deleted_at column', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      return db.entries.find({ deleted_at: { $ne: null } });
+    }).then((query) => {
+
+      expect(query).to.equal('SELECT * FROM "entries" WHERE "deleted_at" IS NOT NULL');
+      done();
+    }).catch(done);
+  });
+
+  it('allows overriding the default filter for tables with a deleted_at column by passing a date', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      return db.entries.find({ deleted_at: new Date() });
+    }).then((query) => {
+
+      expect(query).to.match(/SELECT \* FROM "entries" WHERE "deleted_at" = '([^']+)'$/);
+      done();
+    }).catch(done);
+  });
+
   it('can find rows in a table with a condition', (done) => {
 
     const mr = new Muckraker({
@@ -515,7 +566,7 @@ describe('update', () => {
       return db.entries.update({ value: 'test' }, { value: 'different test' });
     }).then((query) => {
 
-      expect(query).to.match(/^UPDATE "entries" SET \("value", "updated_at"\) = \('different test', '([^\)]+)'\) WHERE "value" = 'test' RETURNING \*$/);
+      expect(query).to.match(/^UPDATE "entries" SET \("value", "updated_at"\) = \('different test', '([^\)]+)'\) WHERE "value" = 'test' AND "deleted_at" IS NULL RETURNING \*$/);
       done();
     }).catch(done);
   });
