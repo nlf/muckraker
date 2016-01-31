@@ -99,7 +99,7 @@ The default comparison for all properties is `=` (equals). Other operators are s
 - `$eq` for `=`
 - `$ne` for `!=`
 - `$lt` for `<`
-- `$lte` for '<=`
+- `$lte` for `<=`
 - `$gt` for `>`
 - `$gte` for `>=`
 - `$in` for `IN`
