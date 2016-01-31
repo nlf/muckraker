@@ -94,10 +94,23 @@ mr.connect().then((db) => {
 });
 ```
 
-## Validation
+The default comparison for all properties is `=` (equals). Other operators are supported by using an object with the matching key, such as `db.users.find({ column: { $ne: 'test' } })`. Currently available operators are:
 
-Muckraker will also generate rough [joi](https://github.com/hapijs/joi) validators for your tables, they are accessible at `db.validators[tablename]`. Note, however that this feature is very preliminary at this point and won't be able to identify every single type of column. If you'd like to add support for additional types or constraints, modify the `internals.generateValidators` method in `lib/database.js` and send me a pull request.
+- `$eq` for `=`
+- `$ne` for `!=`
+- `$lt` for `<`
+- `$lte` for '<=`
+- `$gt` for `>`
+- `$gte` for `>=`
+- `$in` for `IN`
+- `$like` for `LIKE`
+- `$nlike` for `NOT LIKE`
 
+## Modification Dates
+
+Muckraker also will attempt to automatically update `created_at` and `updated_at` fields for you when using insert and update/updateOne. When inserting both columns will be set to the current time (assuming the columns exist in your table), when updated the `updated_at` column will be set to the current time.
+
+In addition to that, soft deletes are also available in the form of adding a `deleted_at` column to your table. When this is the case the `destroy()` method will set this column to the current time rather than actually removing the row. The various query methods are also adjusted to default to specifying `"deleted_at" IS NULL` as part of their conditions. You can pass a different value for the `deleted_at` column if you wish to see rows where this value is set, for example `db.users.find({ deleted_at: { $ne: null } })` would give you a list of deleted users.
 
 ## REPL
 
