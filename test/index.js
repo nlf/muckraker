@@ -350,7 +350,7 @@ describe('find', () => {
       return db.users.find({ pets: { $in: [1, 2, 3] } });
     }).then((query) => {
 
-      expect(query).to.equal('SELECT * FROM "users" WHERE "pets" IN array[1,2,3]');
+      expect(query).to.equal('SELECT * FROM "users" WHERE "pets" IN (1,2,3)');
       done();
     }).catch(done);
   });
