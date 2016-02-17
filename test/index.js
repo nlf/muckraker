@@ -665,6 +665,24 @@ describe('scripts', () => {
     }).catch(done);
   });
 
+  it('can run a namespaced script when the table has underscores', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection,
+      scriptDir: Path.join(__dirname, 'db')
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      return db.with_underscores.row();
+    }).then((query) => {
+
+      expect(query).to.equal('SELECT * FROM "users"');
+      done();
+    }).catch(done);
+  });
+
   it('can run a namespaced script that returns a single result', (done) => {
 
     const mr = new Muckraker({
