@@ -355,6 +355,23 @@ describe('find', () => {
     }).catch(done);
   });
 
+  it('can use the $nin operator', (done) => {
+
+    const mr = new Muckraker({
+      connection: internals.connection
+    });
+
+    mr.db = new Mock();
+    mr.connect().then((db) => {
+
+      return db.users.find({ pets: { $nin: [1, 3] } });
+    }).then((query) => {
+
+      expect(query).to.equal('SELECT * FROM "users" WHERE "pets" NOT IN (1,3)');
+      done();
+    }).catch(done);
+  });
+
   it('can use the $like operator', (done) => {
 
     const mr = new Muckraker({
