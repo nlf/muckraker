@@ -103,6 +103,7 @@ The default comparison for all properties is `=` (equals). Other operators are s
 - `$gt` for `>`
 - `$gte` for `>=`
 - `$in` for `IN`
+- `$nin` for `NOT IN`
 - `$like` for `LIKE`
 - `$nlike` for `NOT LIKE`
 
