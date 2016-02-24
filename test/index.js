@@ -349,6 +349,14 @@ describe('insert', () => {
     expect(query).to.match(/^INSERT INTO "entries" \("value", "created_at", "updated_at"\) VALUES \('test', '([^\)]+)', '([^\)]+)'\) RETURNING \*$/);
     done();
   });
+
+  it('can set an encrypted value', (done) => {
+
+    const db = new Muckraker(Object.assign({}, internals, { encrypt: { 'entries.value': 'somekey' } }));
+    const query = db.entries.insert({ value: 'test' });
+    expect(query).to.match(/^INSERT INTO "entries" \("value", "created_at", "updated_at"\) VALUES \(pgp_sym_encrypt\('test', 'somekey', 'cipher-algo=aes256'\), '([^\)]+)', '([^\)]+)'\) RETURNING \*$/);
+    done();
+  });
 });
 
 describe('destroy', () => {
