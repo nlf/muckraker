@@ -52,7 +52,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find();
-    expect(query).to.equal('SELECT * FROM "users"');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users"`);
     done();
   });
 
@@ -60,7 +60,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.entries.find();
-    expect(query).to.equal('SELECT * FROM "entries" WHERE "deleted_at" IS NULL');
+    expect(query).to.equal(`SELECT ${db.entries._columnList} FROM "entries" WHERE "deleted_at" IS NULL`);
     done();
   });
 
@@ -68,7 +68,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.entries.find({ deleted_at: { $ne: null } });
-    expect(query).to.equal('SELECT * FROM "entries" WHERE "deleted_at" IS NOT NULL');
+    expect(query).to.equal(`SELECT ${db.entries._columnList} FROM "entries" WHERE "deleted_at" IS NOT NULL`);
     done();
   });
 
@@ -76,7 +76,8 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.entries.find({ deleted_at: new Date() });
-    expect(query).to.match(/SELECT \* FROM "entries" WHERE "deleted_at" = '([^']+)'$/);
+    const matcher = new RegExp(`SELECT ${db.entries._columnList} FROM "entries" WHERE "deleted_at" = '[^']+'`);
+    expect(query).to.match(matcher);
     done();
   });
 
@@ -84,7 +85,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ id: { some: 'thing' } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "id" = \'{"some":"thing"}\'');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "id" = '{"some":"thing"}'`);
     done();
   });
 
@@ -92,7 +93,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ id: 0, invalid: 'key' });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "id" = 0');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "id" = 0`);
     done();
   });
 
@@ -100,7 +101,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ blob: { test: 'object' } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{test}\' = \'object\'');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "blob"#>>'{test}' = 'object'`);
     done();
   });
 
@@ -108,7 +109,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ unknown: null });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "unknown" IS NULL');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "unknown" IS NULL`);
     done();
   });
 
@@ -116,7 +117,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ blob: { some: null } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some}\' IS NULL');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "blob"#>>'{some}' IS NULL`);
     done();
   });
 
@@ -124,7 +125,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ unknown: { $eq: null } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "unknown" IS NULL');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "unknown" IS NULL`);
     done();
   });
 
@@ -132,7 +133,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ blob: { some: { $eq: null } } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some}\' IS NULL');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "blob"#>>'{some}' IS NULL`);
     done();
   });
 
@@ -140,7 +141,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ unknown: { $ne: null } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "unknown" IS NOT NULL');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "unknown" IS NOT NULL`);
     done();
   });
 
@@ -148,7 +149,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ blob: { some: { $ne: null } } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some}\' IS NOT NULL');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "blob"#>>'{some}' IS NOT NULL`);
     done();
   });
 
@@ -156,7 +157,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ pets: { $gt: 1 } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "pets" > 1');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "pets" > 1`);
     done();
   });
 
@@ -164,7 +165,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ blob: { some: { value: { $gt: 5 } } } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some,value}\' > 5');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "blob"#>>'{some,value}' > 5`);
     done();
   });
 
@@ -172,7 +173,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ pets: { $gte: 1 } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "pets" >= 1');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "pets" >= 1`);
     done();
   });
 
@@ -180,7 +181,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ blob: { some: { value: { $gte: 5 } } } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some,value}\' >= 5');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "blob"#>>'{some,value}' >= 5`);
     done();
   });
 
@@ -188,7 +189,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ pets: { $lt: 1 } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "pets" < 1');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "pets" < 1`);
     done();
   });
 
@@ -196,7 +197,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ blob: { some: { value: { $lt: 5 } } } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some,value}\' < 5');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "blob"#>>'{some,value}' < 5`);
     done();
   });
 
@@ -204,7 +205,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ pets: { $lte: 1 } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "pets" <= 1');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "pets" <= 1`);
     done();
   });
 
@@ -212,7 +213,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ blob: { some: { value: { $lte: 5 } } } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some,value}\' <= 5');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "blob"#>>'{some,value}' <= 5`);
     done();
   });
 
@@ -220,7 +221,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ pets: { $ne: 1 } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "pets" != 1');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "pets" != 1`);
     done();
   });
 
@@ -228,7 +229,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ blob: { some: { value: { $ne: 5 } } } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some,value}\' != 5');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "blob"#>>'{some,value}' != 5`);
     done();
   });
 
@@ -236,7 +237,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ pets: { $eq: 1 } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "pets" = 1');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "pets" = 1`);
     done();
   });
 
@@ -244,7 +245,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ blob: { some: { value: { $eq: 5 } } } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some,value}\' = 5');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "blob"#>>'{some,value}' = 5`);
     done();
   });
 
@@ -252,7 +253,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ pets: { $in: [1, 2, 3] } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "pets" IN (1,2,3)');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "pets" IN (1,2,3)`);
     done();
   });
 
@@ -260,7 +261,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ blob: { some: { value: { $in: [1, 2, 3] } } } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some,value}\' IN (1,2,3)');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "blob"#>>'{some,value}' IN (1,2,3)`);
     done();
   });
 
@@ -268,7 +269,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ pets: { $nin: [1, 3] } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "pets" NOT IN (1,3)');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "pets" NOT IN (1,3)`);
     done();
   });
 
@@ -276,7 +277,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ blob: { some: { value: { $nin: [1, 2, 3] } } } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some,value}\' NOT IN (1,2,3)');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "blob"#>>'{some,value}' NOT IN (1,2,3)`);
     done();
   });
 
@@ -284,7 +285,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ user_name: { $like: 'test' } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "user_name" LIKE \'test\'');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "user_name" LIKE 'test'`);
     done();
   });
 
@@ -292,7 +293,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ blob: { some: { value: { $like: 'test' } } } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some,value}\' LIKE \'test\'');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "blob"#>>'{some,value}' LIKE 'test'`);
     done();
   });
 
@@ -300,7 +301,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ user_name: { $nlike: 'test' } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "user_name" NOT LIKE \'test\'');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "user_name" NOT LIKE 'test'`);
     done();
   });
 
@@ -308,7 +309,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ blob: { some: { value: { $nlike: 'test' } } } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some,value}\' NOT LIKE \'test\'');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "blob"#>>'{some,value}' NOT LIKE 'test'`);
     done();
   });
 });
@@ -319,7 +320,7 @@ describe('findOne', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.findOne();
-    expect(query).to.equal('SELECT * FROM "users"');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users"`);
     done();
   });
 
@@ -327,7 +328,7 @@ describe('findOne', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.findOne({ id: 0 });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "id" = 0');
+    expect(query).to.equal(`SELECT ${db.users._columnList} FROM "users" WHERE "id" = 0`);
     done();
   });
 });
@@ -338,7 +339,7 @@ describe('insert', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.insert({ id: 0, invalid: 'key', user_name: 'test', blob: { some: 'data' } });
-    expect(query).to.equal('INSERT INTO "users" ("id", "user_name", "blob") VALUES (0, \'test\', \'{"some":"data"}\') RETURNING *');
+    expect(query).to.equal(`INSERT INTO "users" ("id", "user_name", "blob") VALUES (0, 'test', '{"some":"data"}') RETURNING ${db.users._columnList}`);
     done();
   });
 
@@ -346,7 +347,8 @@ describe('insert', () => {
 
     const db = new Muckraker(internals);
     const query = db.entries.insert({ value: 'test' });
-    expect(query).to.match(/^INSERT INTO "entries" \("value", "created_at", "updated_at"\) VALUES \('test', '([^\)]+)', '([^\)]+)'\) RETURNING \*$/);
+    const matcher = new RegExp(`INSERT INTO "entries" \\("value", "created_at", "updated_at"\\) VALUES \\('test', '[^']+', '[^']+'\\) RETURNING ${db.entries._columnList}`);
+    expect(query).to.match(matcher);
     done();
   });
 
@@ -354,7 +356,8 @@ describe('insert', () => {
 
     const db = new Muckraker(Object.assign({}, internals, { encrypt: { 'entries.value': 'somekey' } }));
     const query = db.entries.insert({ value: 'test' });
-    expect(query).to.match(/^INSERT INTO "entries" \("value", "created_at", "updated_at"\) VALUES \(pgp_sym_encrypt\('test', 'somekey', 'cipher-algo=aes256'\), '([^\)]+)', '([^\)]+)'\) RETURNING \*$/);
+    const matcher = new RegExp(`INSERT INTO "entries" \\("value", "created_at", "updated_at"\\) VALUES \\(pgp_sym_encrypt\\('test', 'somekey', 'cipher-algo=aes256'\\), '[^']+', '[^']+'\\) RETURNING ${db.entries._columnList.slice(0, -1)},pgp_sym_decrypt\\("value", 'somekey', 'cipher-algo=aes256'\\)`);
+    expect(query).to.match(matcher);
     done();
   });
 });
@@ -392,7 +395,7 @@ describe('update', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.update({ id: 0, invalid: 'key', blob: { some: 'thing' } }, { user_name: 'test_user', invalid: 'key', blob: { another: 'thing' } });
-    expect(query).to.equal('UPDATE "users" SET ("user_name", "blob") = (\'test_user\', \'{"another":"thing"}\') WHERE "id" = 0 AND "blob"#>>\'{some}\' = \'thing\' RETURNING *');
+    expect(query).to.equal(`UPDATE "users" SET ("user_name", "blob") = ('test_user', '{"another":"thing"}') WHERE "id" = 0 AND "blob"#>>'{some}' = 'thing' RETURNING ${db.users._columnList}`);
     done();
   });
 
@@ -400,7 +403,7 @@ describe('update', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.update(null, { user_name: 'test_user' });
-    expect(query).to.equal('UPDATE "users" SET ("user_name") = (\'test_user\') RETURNING *');
+    expect(query).to.equal(`UPDATE "users" SET ("user_name") = ('test_user') RETURNING ${db.users._columnList}`);
     done();
   });
 
@@ -408,7 +411,8 @@ describe('update', () => {
 
     const db = new Muckraker(internals);
     const query = db.entries.update({ value: 'test' }, { value: 'different test' });
-    expect(query).to.match(/^UPDATE "entries" SET \("value", "updated_at"\) = \('different test', '([^\)]+)'\) WHERE "value" = 'test' AND "deleted_at" IS NULL RETURNING \*$/);
+    const matcher = new RegExp(`UPDATE "entries" SET \\("value", "updated_at"\\) = \\('different test', '[^']+'\\) WHERE "value" = 'test' AND "deleted_at" IS NULL RETURNING ${db.entries._columnList}`);
+    expect(query).to.match(matcher);
     done();
   });
 });
@@ -419,7 +423,7 @@ describe('updateOne', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.updateOne({ id: 0 }, { user_name: 'test_user' });
-    expect(query).to.equal('UPDATE "users" SET ("user_name") = (\'test_user\') WHERE "id" = 0 RETURNING *');
+    expect(query).to.equal(`UPDATE "users" SET ("user_name") = ('test_user') WHERE "id" = 0 RETURNING ${db.users._columnList}`);
     done();
   });
 
@@ -427,7 +431,7 @@ describe('updateOne', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.updateOne(null, { user_name: 'test_user' });
-    expect(query).to.equal('UPDATE "users" SET ("user_name") = (\'test_user\') RETURNING *');
+    expect(query).to.equal(`UPDATE "users" SET ("user_name") = ('test_user') RETURNING ${db.users._columnList}`);
     done();
   });
 });
