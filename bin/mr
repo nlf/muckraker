@@ -20,7 +20,6 @@ catch (e) {
 
 const db = new Muckraker(options);
 
-console.log('Connected to %s', process.argv[2]);
 const repl = Repl.start({
   prompt: 'muckraker> ',
   useGlobal: true,
