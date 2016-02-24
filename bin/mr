@@ -6,13 +6,19 @@ const Repl = require('repl');
 const Util = require('util');
 
 if (process.argv.length === 2) {
-  console.error('Usage: muckraker [database|connection string]');
+  console.error('Usage: muckraker [database|connection string|json config]');
   process.exit(1);
 }
 
-const db = new Muckraker({
-  connection: process.argv[2]
-});
+let options = {};
+try {
+  options = JSON.parse(process.argv[2]);
+}
+catch (e) {
+  options.connection = process.argv[2];
+}
+
+const db = new Muckraker(options);
 
 console.log('Connected to %s', process.argv[2]);
 const repl = Repl.start({

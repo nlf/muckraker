@@ -3,6 +3,11 @@
 const PG = require('pg-promise');
 
 class MockPG {
+  constructor(fail) {
+
+    this.fail = fail;
+  }
+
   query(q, p) {
 
     return PG.as.format(q instanceof PG.QueryFile ? q.query : q, p);
@@ -34,6 +39,10 @@ class MockPG {
   }
 
   task(fn) {
+
+    if (this.fail) {
+      return Promise.reject(new Error('Failed to connect'));
+    }
 
     return fn({
       batch: function (results) {

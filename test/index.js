@@ -33,6 +33,16 @@ describe('constructor', () => {
     expect(db).to.be.an.instanceof(Muckraker);
     done();
   });
+
+  it('correctly throws an error when connection fails', (done) => {
+
+    expect(() => {
+
+      const db = new Muckraker({ _mocked: new Mock(true) });
+      expect(db).to.exist();
+    }).to.throw(Error, 'Failed to connect');
+    done();
+  });
 });
 
 describe('query', () => {
