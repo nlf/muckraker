@@ -98,6 +98,28 @@ The default comparison for all properties is `=` (equals). Other operators are s
 - `$like` for `LIKE`
 - `$nlike` for `NOT LIKE`
 
+JSON columns will be automatically resolved to allow deep querying, for example:
+
+```js
+
+// in this example the 'users' table has a 'preferences' column defined as being the 'jsonb' type
+
+const Muckraker = require('muckraker');
+const db = new Muckraker({
+  connection: { // passes through to the pg library
+    host: 'localhost',
+    database: 'my_app'
+  }
+});
+
+db.users.find({ preferences: { sendEmails: true } });
+// the above would yield: 'SELECT * FROM "users" WHERE "preferences"#>>'{sendEmails}' = 'true'
+
+// the keys can be as deep as you like
+db.users.find({ preferences: { some: { really: { deep: { property: { $ne: null } } } } } });
+// this would yield: 'SELECT * FROM "users" WHERE "preferences"#>>'{some,really,deep,property}' IS NOT NULL'
+```
+
 ## Modification Dates
 
 Muckraker also will attempt to automatically update `created_at` and `updated_at` fields for you when using insert and update/updateOne. When inserting both columns will be set to the current time (assuming the columns exist in your table), when updated the `updated_at` column will be set to the current time.

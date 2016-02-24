@@ -80,6 +80,14 @@ describe('find', () => {
     done();
   });
 
+  it('can compare a column to a json object', (done) => {
+
+    const db = new Muckraker(internals);
+    const query = db.users.find({ id: { some: 'thing' } });
+    expect(query).to.equal('SELECT * FROM "users" WHERE "id" = \'{"some":"thing"}\'');
+    done();
+  });
+
   it('can find rows in a table with a condition', (done) => {
 
     const db = new Muckraker(internals);
@@ -92,7 +100,7 @@ describe('find', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ blob: { test: 'object' } });
-    expect(query).to.equal('SELECT * FROM "users" WHERE "blob" = \'{"test":"object"}\'');
+    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{test}\' = \'object\'');
     done();
   });
 
@@ -104,11 +112,27 @@ describe('find', () => {
     done();
   });
 
+  it('can find rows in a table with a json value that is null', (done) => {
+
+    const db = new Muckraker(internals);
+    const query = db.users.find({ blob: { some: null } });
+    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some}\' IS NULL');
+    done();
+  });
+
   it('can find rows in a table with a column that is explicitly null', (done) => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ unknown: { $eq: null } });
     expect(query).to.equal('SELECT * FROM "users" WHERE "unknown" IS NULL');
+    done();
+  });
+
+  it('can find rows in a table with a json value that is explicitly null', (done) => {
+
+    const db = new Muckraker(internals);
+    const query = db.users.find({ blob: { some: { $eq: null } } });
+    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some}\' IS NULL');
     done();
   });
 
@@ -120,11 +144,27 @@ describe('find', () => {
     done();
   });
 
+  it('can find rows in a table with a json value that is not null', (done) => {
+
+    const db = new Muckraker(internals);
+    const query = db.users.find({ blob: { some: { $ne: null } } });
+    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some}\' IS NOT NULL');
+    done();
+  });
+
   it('can use the $gt operator', (done) => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ pets: { $gt: 1 } });
     expect(query).to.equal('SELECT * FROM "users" WHERE "pets" > 1');
+    done();
+  });
+
+  it('can use the $gt operator on a json column', (done) => {
+
+    const db = new Muckraker(internals);
+    const query = db.users.find({ blob: { some: { value: { $gt: 5 } } } });
+    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some,value}\' > 5');
     done();
   });
 
@@ -136,11 +176,27 @@ describe('find', () => {
     done();
   });
 
+  it('can use the $gte operator on a json column', (done) => {
+
+    const db = new Muckraker(internals);
+    const query = db.users.find({ blob: { some: { value: { $gte: 5 } } } });
+    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some,value}\' >= 5');
+    done();
+  });
+
   it('can use the $lt operator', (done) => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ pets: { $lt: 1 } });
     expect(query).to.equal('SELECT * FROM "users" WHERE "pets" < 1');
+    done();
+  });
+
+  it('can use the $lt operator on a json column', (done) => {
+
+    const db = new Muckraker(internals);
+    const query = db.users.find({ blob: { some: { value: { $lt: 5 } } } });
+    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some,value}\' < 5');
     done();
   });
 
@@ -152,11 +208,27 @@ describe('find', () => {
     done();
   });
 
+  it('can use the $lte operator on a json column', (done) => {
+
+    const db = new Muckraker(internals);
+    const query = db.users.find({ blob: { some: { value: { $lte: 5 } } } });
+    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some,value}\' <= 5');
+    done();
+  });
+
   it('can use the $ne operator', (done) => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ pets: { $ne: 1 } });
     expect(query).to.equal('SELECT * FROM "users" WHERE "pets" != 1');
+    done();
+  });
+
+  it('can use the $ne operator on a json column', (done) => {
+
+    const db = new Muckraker(internals);
+    const query = db.users.find({ blob: { some: { value: { $ne: 5 } } } });
+    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some,value}\' != 5');
     done();
   });
 
@@ -168,11 +240,27 @@ describe('find', () => {
     done();
   });
 
+  it('can use the $eq operator on a json column', (done) => {
+
+    const db = new Muckraker(internals);
+    const query = db.users.find({ blob: { some: { value: { $eq: 5 } } } });
+    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some,value}\' = 5');
+    done();
+  });
+
   it('can use the $in operator', (done) => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ pets: { $in: [1, 2, 3] } });
     expect(query).to.equal('SELECT * FROM "users" WHERE "pets" IN (1,2,3)');
+    done();
+  });
+
+  it('can use the $in operator on a json column', (done) => {
+
+    const db = new Muckraker(internals);
+    const query = db.users.find({ blob: { some: { value: { $in: [1, 2, 3] } } } });
+    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some,value}\' IN (1,2,3)');
     done();
   });
 
@@ -184,6 +272,14 @@ describe('find', () => {
     done();
   });
 
+  it('can use the $nin operator on a json column', (done) => {
+
+    const db = new Muckraker(internals);
+    const query = db.users.find({ blob: { some: { value: { $nin: [1, 2, 3] } } } });
+    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some,value}\' NOT IN (1,2,3)');
+    done();
+  });
+
   it('can use the $like operator', (done) => {
 
     const db = new Muckraker(internals);
@@ -192,11 +288,27 @@ describe('find', () => {
     done();
   });
 
+  it('can use the $like operator on a json column', (done) => {
+
+    const db = new Muckraker(internals);
+    const query = db.users.find({ blob: { some: { value: { $like: 'test' } } } });
+    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some,value}\' LIKE \'test\'');
+    done();
+  });
+
   it('can use the $nlike operator', (done) => {
 
     const db = new Muckraker(internals);
     const query = db.users.find({ user_name: { $nlike: 'test' } });
     expect(query).to.equal('SELECT * FROM "users" WHERE "user_name" NOT LIKE \'test\'');
+    done();
+  });
+
+  it('can use the $nlike operator on a json column', (done) => {
+
+    const db = new Muckraker(internals);
+    const query = db.users.find({ blob: { some: { value: { $nlike: 'test' } } } });
+    expect(query).to.equal('SELECT * FROM "users" WHERE "blob"#>>\'{some,value}\' NOT LIKE \'test\'');
     done();
   });
 });
@@ -272,7 +384,7 @@ describe('update', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.update({ id: 0, invalid: 'key', blob: { some: 'thing' } }, { user_name: 'test_user', invalid: 'key', blob: { another: 'thing' } });
-    expect(query).to.equal('UPDATE "users" SET ("user_name", "blob") = (\'test_user\', \'{"another":"thing"}\') WHERE "id" = 0 AND "blob" = \'{"some":"thing"}\' RETURNING *');
+    expect(query).to.equal('UPDATE "users" SET ("user_name", "blob") = (\'test_user\', \'{"another":"thing"}\') WHERE "id" = 0 AND "blob"#>>\'{some}\' = \'thing\' RETURNING *');
     done();
   });
 
