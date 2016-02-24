@@ -339,7 +339,7 @@ describe('insert', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.insert({ id: 0, invalid: 'key', user_name: 'test', blob: { some: 'data' } });
-    expect(query).to.equal(`INSERT INTO "users" ("id", "user_name", "blob") VALUES (0, 'test', '{"some":"data"}') RETURNING ${db.users._columnList}`);
+    expect(query).to.equal(`INSERT INTO "users" ("id","user_name","blob") VALUES (0,'test','{"some":"data"}') RETURNING ${db.users._columnList}`);
     done();
   });
 
@@ -347,7 +347,7 @@ describe('insert', () => {
 
     const db = new Muckraker(internals);
     const query = db.entries.insert({ value: 'test' });
-    const matcher = new RegExp(`INSERT INTO "entries" \\("value", "created_at", "updated_at"\\) VALUES \\('test', '[^']+', '[^']+'\\) RETURNING ${db.entries._columnList}`);
+    const matcher = new RegExp(`INSERT INTO "entries" \\("value","created_at","updated_at"\\) VALUES \\('test','[^']+','[^']+'\\) RETURNING ${db.entries._columnList}`);
     expect(query).to.match(matcher);
     done();
   });
@@ -356,7 +356,7 @@ describe('insert', () => {
 
     const db = new Muckraker(Object.assign({}, internals, { encrypt: { 'entries.value': 'somekey' } }));
     const query = db.entries.insert({ value: 'test' });
-    const matcher = new RegExp(`INSERT INTO "entries" \\("value", "created_at", "updated_at"\\) VALUES \\(pgp_sym_encrypt\\('test', 'somekey', 'cipher-algo=aes256'\\), '[^']+', '[^']+'\\) RETURNING ${db.entries._columnList.slice(0, -1)},pgp_sym_decrypt\\("value", 'somekey', 'cipher-algo=aes256'\\)`);
+    const matcher = new RegExp(`INSERT INTO "entries" \\("value","created_at","updated_at"\\) VALUES \\(pgp_sym_encrypt\\('test','somekey','cipher-algo=aes256'\\),'[^']+','[^']+'\\) RETURNING ${db.entries._columnList.slice(0, -1)},pgp_sym_decrypt\\("value",'somekey','cipher-algo=aes256'\\)`);
     expect(query).to.match(matcher);
     done();
   });
@@ -395,7 +395,7 @@ describe('update', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.update({ id: 0, invalid: 'key', blob: { some: 'thing' } }, { user_name: 'test_user', invalid: 'key', blob: { another: 'thing' } });
-    expect(query).to.equal(`UPDATE "users" SET ("user_name", "blob") = ('test_user', '{"another":"thing"}') WHERE "id" = 0 AND "blob"#>>'{some}' = 'thing' RETURNING ${db.users._columnList}`);
+    expect(query).to.equal(`UPDATE "users" SET ("user_name","blob") = ('test_user','{"another":"thing"}') WHERE "id" = 0 AND "blob"#>>'{some}' = 'thing' RETURNING ${db.users._columnList}`);
     done();
   });
 
@@ -411,7 +411,7 @@ describe('update', () => {
 
     const db = new Muckraker(internals);
     const query = db.entries.update({ value: 'test' }, { value: 'different test' });
-    const matcher = new RegExp(`UPDATE "entries" SET \\("value", "updated_at"\\) = \\('different test', '[^']+'\\) WHERE "value" = 'test' AND "deleted_at" IS NULL RETURNING ${db.entries._columnList}`);
+    const matcher = new RegExp(`UPDATE "entries" SET \\("value","updated_at"\\) = \\('different test','[^']+'\\) WHERE "value" = 'test' AND "deleted_at" IS NULL RETURNING ${db.entries._columnList}`);
     expect(query).to.match(matcher);
     done();
   });
