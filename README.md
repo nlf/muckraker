@@ -26,6 +26,12 @@ const db = new Muckraker({
 // db.users.destroy(q) deletes rows, optionally passing 'q' as a WHERE clause (this method returns no results)
 ```
 
+All of the above functions, except for destroy, also accept a final parameter as an array of column names that you want returned
+
+```javascript
+db.users.find({}, ['id']); // list all users and only return the id column
+```
+
 Additionally, muckraker will enumerate any stored functions you have and attach them to the database object namespacing those that match an existing table
 
 ```javascript
@@ -125,6 +131,53 @@ db.users.find({ preferences: { some: { really: { deep: { property: { $ne: null }
 Muckraker also will attempt to automatically update `created_at` and `updated_at` fields for you when using insert and update/updateOne. When inserting both columns will be set to the current time (assuming the columns exist in your table), when updated the `updated_at` column will be set to the current time.
 
 In addition to that, soft deletes are also available in the form of adding a `deleted_at` column to your table. When this is the case the `destroy()` method will set this column to the current time rather than actually removing the row. The various query methods are also adjusted to default to specifying `"deleted_at" IS NULL` as part of their conditions. You can pass a different value for the `deleted_at` column if you wish to see rows where this value is set, for example `db.users.find({ deleted_at: { $ne: null } })` would give you a list of deleted users.
+
+## Encryption
+
+Muckraker also has some basic support for encryption via the `pgcrypto` extension and its `pgp_sym_encrypt` and `pgp_sym_decrypt` methods. To use it, you must inform muckraker about what columns are encrypted:
+
+```javascript
+const db = new Muckraker({
+  connection: {
+    host: 'localhost',
+    database: 'my_app'
+  },
+  encrypt: {
+    'users.secret': 'some_secret_key'
+  }
+});
+```
+
+The above configuration tells muckraker that the `"secret"` column in the `"users"` table is encrypted. In order for this to work correctly, you must load the `pgcrypto` extension by running `CREATE EXTENSION "pgcrypto";`. You must also set the column type of the encrypted column to `BYTEA`.
+
+Now when the `"secret"` column is written to, its value will be encrypted by postgres:
+
+```javascript
+db.users.insert({ name: 'test', secret: 'some super secret value' });
+// writes the result of pgp_sym_encrypt('some super secret value', 'some_secret_key', 'cipher-algo=aes256') to the "secret" column
+```
+
+When performing queries, by default any encrypted columns are not returned. This is to help prevent accidentally leaking sensitive data. If you would like to return an encrypted column, pass an array of column names manually and muckraker will decrypt the value and return it for you:
+
+```javascript
+db.users.findOne({ name: 'test' }, ['name', 'secret']);
+// returns { name: 'test', secret: 'some super secret value' }
+```
+
+The default cipher of `aes256` may be overridden by passing a `cipher` property in the options:
+
+```javascript
+const db = new Muckraker({
+  connection: {
+    host: 'localhost',
+    database: 'my_app'
+  },
+  encrypt: {
+    'users.secret': 'some_secret_key'
+  },
+  cipher: 'aes192'
+});
+```
 
 ## REPL
 
