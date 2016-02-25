@@ -74,6 +74,22 @@ describe('find', () => {
     done();
   });
 
+  it('can return a property of a json column', (done) => {
+
+    const db = new Muckraker(internals);
+    const query = db.users.find({}, ['id', ['blob', 'some', 'path']]);
+    expect(query).to.equal('SELECT "id","blob"#>>\'{some,path}\' AS "path" FROM "users"');
+    done();
+  });
+
+  it('ignores invalid json properties', (done) => {
+
+    const db = new Muckraker(internals);
+    const query = db.users.find({}, [['id', 'invalid', 'path'], 'user_name', ['invalid', 'path'], ['json_blob', 'real', 'path']]);
+    expect(query).to.equal('SELECT "user_name","json_blob"#>>\'{real,path}\' AS "path" FROM "users"');
+    done();
+  });
+
   it('adds a filter for tables with a deleted_at column', (done) => {
 
     const db = new Muckraker(internals);

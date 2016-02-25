@@ -32,6 +32,13 @@ All of the above functions, except for destroy, also accept a final parameter as
 db.users.find({}, ['id']); // list all users and only return the id column
 ```
 
+If you want to return a property or sub property of a json or jsonb column directly, specify its key as an array with the first item being the name of the column and the rest being the path to the final key. The result will be named after the final key in the array:
+
+```javascript
+db.users.find({}, ['name', ['json_column', 'some', 'deep', 'path']]);
+// this yields: SELECT "name","json_column"#>>'{some,deep,path}' AS "path" FROM "users"
+```
+
 Additionally, muckraker will enumerate any stored functions you have and attach them to the database object namespacing those that match an existing table
 
 ```javascript
