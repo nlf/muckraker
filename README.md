@@ -23,7 +23,7 @@ const db = new Muckraker({
 // db.users.insert(data) inserts the data into the users table and returns the inserted row
 // db.users.update(q, data) updates rows matching q with data and returns an array of all modified rows
 // db.users.updateOne(q, data) updates rows matching q with data and returns a single modified row
-// db.users.destroy(q) deletes rows, optionally passing 'q' as a WHERE clause (this method returns no results)
+// db.users.destroy(q, options) deletes rows, optionally passing 'q' as a WHERE clause (this method returns no results)
 ```
 
 All of the above functions, except for destroy, also accept a final parameter as an array of column names that you want returned
@@ -138,6 +138,8 @@ db.users.find({ preferences: { some: { really: { deep: { property: { $ne: null }
 Muckraker also will attempt to automatically update `created_at` and `updated_at` fields for you when using insert and update/updateOne. When inserting both columns will be set to the current time (assuming the columns exist in your table), when updated the `updated_at` column will be set to the current time.
 
 In addition to that, soft deletes are also available in the form of adding a `deleted_at` column to your table. When this is the case the `destroy()` method will set this column to the current time rather than actually removing the row. The various query methods are also adjusted to default to specifying `"deleted_at" IS NULL` as part of their conditions. You can pass a different value for the `deleted_at` column if you wish to see rows where this value is set, for example `db.users.find({ deleted_at: { $ne: null } })` would give you a list of deleted users.
+
+If you want to hard delete a row that has a `deleted_at` column pass an options object with `force = true` to the destroy method, for example `db.users.destroy({ id: 0 }, { force: true })`.
 
 ## Encryption
 
