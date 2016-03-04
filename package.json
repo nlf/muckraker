@@ -1,6 +1,6 @@
 {
   "name": "muckraker",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "a lightweight wrapper around pg-promise",
   "main": "lib/index.js",
   "bin": {
