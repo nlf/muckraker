@@ -445,7 +445,7 @@ describe('destroy', () => {
 
     const db = new Muckraker(internals);
     const query = db.entries.destroy({ id: 0 });
-    expect(query).to.match(/UPDATE "entries" SET "deleted_at" = '([^\)]+)' WHERE "id" = 0/);
+    expect(query).to.match(/^UPDATE "entries" SET "deleted_at" = '([^\)]+)' WHERE "id" = 0$/);
     done();
   });
 });
