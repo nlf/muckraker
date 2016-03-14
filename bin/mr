@@ -6,7 +6,7 @@ const Repl = require('repl');
 const Util = require('util');
 
 if (process.argv.length === 2) {
-  console.error('Usage: muckraker [database|connection string|json config]');
+  console.error('Usage: mr [database|connection string|json config]');
   process.exit(1);
 }
 
