@@ -377,6 +377,22 @@ describe('insert', () => {
     done();
   });
 
+  it('can insert a row with an empty array cast to the correct type', (done) => {
+
+    const db = new Muckraker(internals);
+    const query = db.users.insert({ id: 0, user_name: 'test', pet_names: [] });
+    expect(query).to.equal(`INSERT INTO "users" ("id","user_name","pet_names") VALUES (0,'test',array[]::text[]) RETURNING ${db.users._formatColumns()}`);
+    done();
+  });
+
+  it('can insert a row with a populated array cast to the correct type', (done) => {
+
+    const db = new Muckraker(internals);
+    const query = db.users.insert({ id: 0, user_name: 'test', pet_names: ['fluffy', 'spike'] });
+    expect(query).to.equal(`INSERT INTO "users" ("id","user_name","pet_names") VALUES (0,'test',array['fluffy','spike']::text[]) RETURNING ${db.users._formatColumns()}`);
+    done();
+  });
+
   it('can set created_at and updated_at implicitly when creating a row', (done) => {
 
     const db = new Muckraker(internals);
