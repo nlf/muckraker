@@ -52,7 +52,7 @@ class MockPG {
       query: function (q) {
 
         switch (q) {
-          case 'SELECT table_name,column_name,data_type,udt_name,column_default,is_nullable FROM information_schema.columns WHERE table_schema = \'public\'':
+          case 'SELECT table_name,column_name,udt_name::regtype as data_type,column_default,is_nullable FROM information_schema.columns WHERE table_schema = \'public\'':
             return Promise.resolve([
               { table_name: 'users', column_name: 'id', data_type: 'uuid', column_default: 'uuid_generate_v4()', is_nullable: 'NO' },
               { table_name: 'users', column_name: 'user_name', data_type: 'text', column_default: null, is_nullable: 'YES' },
@@ -60,7 +60,7 @@ class MockPG {
               { table_name: 'users', column_name: 'json_blob', data_type: 'json', column_default: null, is_nullable: 'YES' },
               { table_name: 'users', column_name: 'created', data_type: 'timestamp with time zone', column_default: null, is_nullable: 'YES' },
               { table_name: 'users', column_name: 'pets', data_type: 'integer', column_default: null, is_nullable: 'NO' },
-              { table_name: 'users', column_name: 'pet_names', data_type: 'ARRAY', udt_name: '_text', column_default: null, is_nullable: 'YES' },
+              { table_name: 'users', column_name: 'pet_names', data_type: 'text[]', column_default: null, is_nullable: 'YES' },
               { table_name: 'users', column_name: 'unknown', data_type: 'something else', column_default: null, is_nullable: 'YES' },
               { table_name: 'entries', column_name: 'created_at', data_type: 'timestamp with time zone', column_default: null, is_nullable: 'YES' },
               { table_name: 'entries', column_name: 'updated_at', data_type: 'timestamp with time zone', column_default: null, is_nullable: 'YES' },
