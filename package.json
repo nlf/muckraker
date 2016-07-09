@@ -18,11 +18,12 @@
   "license": "MIT",
   "dependencies": {
     "deasync": "^0.1.4",
-    "pg-promise": "^3.2.1"
+    "pg-promise": "^5.1.2"
   },
   "devDependencies": {
-    "code": "^2.1.0",
+    "code": "^3.0.1",
     "eslint-config-andyet": "^2.0.0",
-    "lab": "^9.1.0"
+    "eslint-plugin-hapi": "^4.0.0",
+    "lab": "^10.8.2"
   }
 }
