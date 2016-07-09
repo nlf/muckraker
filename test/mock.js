@@ -79,6 +79,11 @@ class MockPG {
       }
     });
   }
+
+  tx(fn) {
+
+    return fn(this);
+  }
 }
 
 module.exports = MockPG;
