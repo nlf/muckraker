@@ -133,6 +133,39 @@ db.users.find({ preferences: { some: { really: { deep: { property: { $ne: null }
 // this would yield: 'SELECT * FROM "users" WHERE "preferences"#>>'{some,really,deep,property}' IS NOT NULL'
 ```
 
+## Transactions
+
+Transactions are supported with `db.tx(callback)` - the callback will be passed an instance of the db which should be used for making queries on the transaction. You should return a promise from the transaction - if it rejects, the transaction will be rolled back.
+
+For example:
+
+```js
+
+const Muckraker = require('muckraker');
+const db = new Muckraker(
+  connection: { // passes through to the pg library
+    host: 'localhost',
+    database: 'my_app'
+  }
+});
+
+db.tx((t) => {
+
+  // t is an instance of the db, configured for the transaction
+  // so you can use all the methods/tables on it that you would for db
+
+  // return a promise to determine whether to commit/rollback the transaction
+  // if either insert here fails, both would be rolled back
+  return t.orgs.insert({ org_name: 'My Org' }).then((org) => {
+    return t.users.insert({
+      name: 'Phil',
+      org_id: org.id
+    })
+  });
+});
+```
+
+
 ## Modification Dates
 
 Muckraker also will attempt to automatically update `created_at` and `updated_at` fields for you when using insert and update/updateOne. When inserting both columns will be set to the current time (assuming the columns exist in your table), when updated the `updated_at` column will be set to the current time.
