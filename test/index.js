@@ -582,3 +582,18 @@ describe('routines', () => {
     done();
   });
 });
+
+describe('transactions', () => {
+
+  it('can run a transaction', (done) => {
+
+    const db = new Muckraker(internals);
+    db.tx((t) => {
+
+      const query = db.query('SELECT * FROM "users"');
+      expect(query).to.equal('SELECT * FROM "users"');
+      done();
+    });
+  });
+
+});
