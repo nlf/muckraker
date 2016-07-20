@@ -9,8 +9,7 @@ class MockPG {
   }
 
   query(q, p) {
-
-    return PG.as.format(q instanceof PG.QueryFile ? q.query : q, p);
+    return PG.as.format(q, p);
   }
 
   any(q, p) {
