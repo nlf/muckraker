@@ -9,13 +9,6 @@ class MockPG {
   }
 
   query(q, p) {
-    if(q instanceof PG.QueryFile) {
-      q.prepare();
-      if(q.error) {
-        throw q.error;
-      }
-      q = q.query;
-    }
     return PG.as.format(q, p);
   }
 
