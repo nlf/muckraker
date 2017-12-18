@@ -17,13 +17,13 @@
   "author": "Nathan LaFreniere <quitlahok@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "deasync": "^0.1.4",
-    "pg-promise": "^5.2.4"
+    "deasync": "^0.1.12",
+    "pg-promise": "^7.3.2"
   },
   "devDependencies": {
-    "code": "^3.0.1",
+    "code": "^5.1.2",
     "eslint-config-andyet": "^2.0.0",
     "eslint-plugin-hapi": "^4.0.0",
-    "lab": "^10.8.2"
+    "lab": "^15.1.2"
   }
 }

@@ -9,6 +9,7 @@ class MockPG {
   }
 
   query(q, p) {
+
     return PG.as.format(q, p);
   }
 
