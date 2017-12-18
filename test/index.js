@@ -420,21 +420,21 @@ describe('update', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.update({ id: 0, invalid: 'key', blob: { some: 'thing' } }, { user_name: 'test_user', invalid: 'key', blob: { another: 'thing' } });
-    expect(query).to.equal(`UPDATE "users" SET ("user_name","blob") = ('test_user','{"another":"thing"}') WHERE "id" = 0 AND "blob"#>>'{some}' = 'thing' RETURNING ${db.users._formatColumns()}`);
+    expect(query).to.equal(`UPDATE "users" SET "user_name" = 'test_user', "blob" = '{"another":"thing"}' WHERE "id" = 0 AND "blob"#>>'{some}' = 'thing' RETURNING ${db.users._formatColumns()}`);
   });
 
   it('can update a row without a query', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.update(null, { user_name: 'test_user' });
-    expect(query).to.equal(`UPDATE "users" SET ("user_name") = ('test_user') RETURNING ${db.users._formatColumns()}`);
+    expect(query).to.equal(`UPDATE "users" SET "user_name" = 'test_user' RETURNING ${db.users._formatColumns()}`);
   });
 
   it('can set the updated_at column implicitly if it exists', () => {
 
     const db = new Muckraker(internals);
     const query = db.entries.update({ value: 'test' }, { value: 'different test' });
-    const matcher = new RegExp(`UPDATE "entries" SET \\("value","updated_at"\\) = \\('different test','[^']+'\\) WHERE "value" = 'test' AND "deleted_at" IS NULL RETURNING ${db.entries._formatColumns()}`);
+    const matcher = new RegExp(`UPDATE "entries" SET "value" = 'different test', "updated_at" = '[^']+' WHERE "value" = 'test' AND "deleted_at" IS NULL RETURNING ${db.entries._formatColumns()}`);
     expect(query).to.match(matcher);
   });
 });
@@ -445,14 +445,14 @@ describe('updateOne', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.updateOne({ id: 0 }, { user_name: 'test_user' });
-    expect(query).to.equal(`UPDATE "users" SET ("user_name") = ('test_user') WHERE "id" = 0 RETURNING ${db.users._formatColumns()}`);
+    expect(query).to.equal(`UPDATE "users" SET "user_name" = 'test_user' WHERE "id" = 0 RETURNING ${db.users._formatColumns()}`);
   });
 
   it('can update a row without a query', () => {
 
     const db = new Muckraker(internals);
     const query = db.users.updateOne(null, { user_name: 'test_user' });
-    expect(query).to.equal(`UPDATE "users" SET ("user_name") = ('test_user') RETURNING ${db.users._formatColumns()}`);
+    expect(query).to.equal(`UPDATE "users" SET "user_name" = 'test_user' RETURNING ${db.users._formatColumns()}`);
   });
 });
 
