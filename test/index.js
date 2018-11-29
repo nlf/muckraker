@@ -520,12 +520,31 @@ describe('routines', () => {
 
 describe('transactions', () => {
 
+  it('txMode exists', () => {
+
+    const db = new Muckraker(internals);
+    expect(db.txMode).to.exist();
+  });
+
   it('can run a transaction', () => {
 
     const db = new Muckraker(internals);
     return db.tx((t) => {
 
-      const query = db.query('SELECT * FROM "users"');
+      expect(t._db._txopts).to.equal({});
+      const query = t.query('SELECT * FROM "users"');
+      expect(query).to.equal('SELECT * FROM "users"');
+    });
+  });
+
+  it('can run a transaction with options', () => {
+
+    const db = new Muckraker(internals);
+    const opts = { test: true };
+    return db.tx(opts, (t) => {
+
+      expect(t._db._txopts).to.equal(opts);
+      const query = t.query('SELECT * FROM "users"');
       expect(query).to.equal('SELECT * FROM "users"');
     });
   });

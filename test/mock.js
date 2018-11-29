@@ -80,8 +80,9 @@ class MockPG {
     });
   }
 
-  tx(fn) {
+  tx(opts, fn) {
 
+    this._txopts = opts; //Set so we can find it in tests
     return fn(this);
   }
 }
