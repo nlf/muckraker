@@ -135,7 +135,7 @@ db.users.find({ preferences: { some: { really: { deep: { property: { $ne: null }
 
 ## Transactions
 
-Transactions are supported with `db.tx(callback)` - the callback will be passed an instance of the db which should be used for making queries on the transaction. You should return a promise from the transaction - if it rejects, the transaction will be rolled back.
+Transactions are supported with `db.tx([options], callback)` - the callback will be passed an instance of the db which should be used for making queries on the transaction. You should return a promise from the transaction - if it rejects, the transaction will be rolled back. Options are optional.
 
 For example:
 
@@ -156,6 +156,44 @@ db.tx((t) => {
 
   // return a promise to determine whether to commit/rollback the transaction
   // if either insert here fails, both would be rolled back
+  return t.orgs.insert({ org_name: 'My Org' }).then((org) => {
+    return t.users.insert({
+      name: 'Phil',
+      org_id: org.id
+    })
+  });
+});
+```
+
+Options are passed through to the underlying pg-promise method
+[documented here](https://github.com/vitaly-t/pg-promise#configurable-transactions).
+
+The [Transaction Mode namespace](http://vitaly-t.github.io/pg-promise/txMode.html) is accessible from `db.txMode`.
+
+Example:
+
+```js
+
+const Muckraker = require('muckraker');
+const db = new Muckraker(
+  connection: {
+    host: 'localhost',
+    database: 'my_app'
+  }
+});
+
+const TransactionMode = db.txMode.TransactionMode;
+const isolationLevel = db.txMode.isolationLevel;
+
+const mode = new TransactionMode({
+    tiLevel: isolationLevel.serializable,
+    readOnly: true,
+    deferrable: true
+});
+
+db.tx({ mode }, (t) => {
+
+  // this transaction will now run in a serializable isolation level, readonly, and deferrable
   return t.orgs.insert({ org_name: 'My Org' }).then((org) => {
     return t.users.insert({
       name: 'Phil',
