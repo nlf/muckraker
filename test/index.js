@@ -1,13 +1,11 @@
 'use strict'
 
 const Muckraker = require('../')
+
 const Mock = require('./mock')
 const Path = require('path')
 
-const lab = exports.lab = require('lab').script()
-const expect = require('code').expect
-const it = lab.test
-const describe = lab.experiment
+const { test } = require('tap')
 
 const internals = {
   connection: {
@@ -16,302 +14,301 @@ const internals = {
   _mocked: new Mock()
 }
 
-describe('constructor', () => {
-  it('can create an instance of Muckraker', () => {
+test('constructor', async () => {
+  test('can create an instance of Muckraker', async (t) => {
     const db = new Muckraker(internals)
-    expect(db).to.exist()
-    expect(db).to.be.an.instanceof(Muckraker)
+    t.ok(db)
+    t.ok(db instanceof Muckraker)
   })
 
-  it('can create an instance of Muckraker while specifying a different scriptDir', () => {
+  test('can create an instance of Muckraker while specifying a different scriptDir', async (t) => {
     const db = new Muckraker(Object.assign({}, internals, { scriptDir: Path.join(__dirname, 'db') }))
-    expect(db).to.exist()
-    expect(db).to.be.an.instanceof(Muckraker)
+    t.ok(db)
+    t.ok(db instanceof Muckraker)
   })
 
-  it('correctly throws an error when connection fails', () => {
-    expect(() => {
-      const db = new Muckraker({ _mocked: new Mock(true) })
-      expect(db).to.exist()
-    }).to.throw(Error, 'Failed to connect')
+  test('correctly throws an error when connection fails', async (t) => {
+    t.throws(() => {
+      new Muckraker({ _mocked: new Mock(true) })
+    }, 'Failed to connect')
   })
 })
 
-describe('query', () => {
-  it('can send a raw query', () => {
+test('query', async () => {
+  test('can send a raw query', async (t) => {
     const db = new Muckraker(internals)
     const query = db.query('SELECT * FROM "users"')
-    expect(query).to.equal('SELECT * FROM "users"')
+    t.equal(query, 'SELECT * FROM "users"')
   })
 })
 
-describe('find', () => {
-  it('can find rows in a table', () => {
+test('find', async () =>  {
+  test('can find rows in a table', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find()
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users"`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users"`)
   })
 
-  it('can return a subset of columns', () => {
+  test('can return a subset of columns', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({}, ['id', 'user_name', 'junk'])
-    expect(query).to.equal('SELECT "id","user_name" FROM "users"')
+    t.equal(query, 'SELECT "id","user_name" FROM "users"')
   })
 
-  it('can return a property of a json column', () => {
+  test('can return a property of a json column', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({}, ['id', ['blob', 'some', 'path']])
-    expect(query).to.equal('SELECT "id","blob"#>>\'{some,path}\' AS "path" FROM "users"')
+    t.equal(query, 'SELECT "id","blob"#>>\'{some,path}\' AS "path" FROM "users"')
   })
 
-  it('ignores invalid json properties', () => {
+  test('ignores invalid json properties', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({}, [['id', 'invalid', 'path'], 'user_name', ['invalid', 'path'], ['json_blob', 'real', 'path']])
-    expect(query).to.equal('SELECT "user_name","json_blob"#>>\'{real,path}\' AS "path" FROM "users"')
+    t.equal(query, 'SELECT "user_name","json_blob"#>>\'{real,path}\' AS "path" FROM "users"')
   })
 
-  it('adds a filter for tables with a deleted_at column', () => {
+  test('adds a filter for tables with a deleted_at column', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.entries.find()
-    expect(query).to.equal(`SELECT ${db.entries._formatColumns()} FROM "entries" WHERE "deleted_at" IS NULL`)
+    t.equal(query, `SELECT ${db.entries._formatColumns()} FROM "entries" WHERE "deleted_at" IS NULL`)
   })
 
-  it('allows overriding the default filter for tables with a deleted_at column', () => {
+  test('allows overriding the default filter for tables with a deleted_at column', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.entries.find({ deleted_at: { $ne: null } })
-    expect(query).to.equal(`SELECT ${db.entries._formatColumns()} FROM "entries" WHERE "deleted_at" IS NOT NULL`)
+    t.equal(query, `SELECT ${db.entries._formatColumns()} FROM "entries" WHERE "deleted_at" IS NOT NULL`)
   })
 
-  it('allows overriding the default filter for tables with a deleted_at column by passing a date', () => {
+  test('allows overriding the default filter for tables with a deleted_at column by passing a date', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.entries.find({ deleted_at: new Date() })
     const matcher = new RegExp(`SELECT ${db.entries._formatColumns()} FROM "entries" WHERE "deleted_at" = '[^']+'`)
-    expect(query).to.match(matcher)
+    t.match(query, matcher)
   })
 
-  it('can compare a column to a json object', () => {
+  test('can compare a column to a json object', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ id: { some: 'thing' } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "id" = '{"some":"thing"}'`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "id" = '{"some":"thing"}'`)
   })
 
-  it('can find rows in a table with a condition', () => {
+  test('can find rows in a table with a condition', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ id: 0, invalid: 'key' })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "id" = 0`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "id" = 0`)
   })
 
-  it('can find rows in a table with a condition in a json column', () => {
+  test('can find rows in a table with a condition in a json column', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ blob: { test: 'object' } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{test}' = 'object'`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{test}' = 'object'`)
   })
 
-  it('can find rows in a table with a column that is null', () => {
+  test('can find rows in a table with a column that is null', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ unknown: null })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "unknown" IS NULL`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "unknown" IS NULL`)
   })
 
-  it('can find rows in a table with a json value that is null', () => {
+  test('can find rows in a table with a json value that is null', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ blob: { some: null } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some}' IS NULL`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some}' IS NULL`)
   })
 
-  it('can find rows in a table with a column that is explicitly null', () => {
+  test('can find rows in a table with a column that is explicitly null', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ unknown: { $eq: null } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "unknown" IS NULL`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "unknown" IS NULL`)
   })
 
-  it('can find rows in a table with a json value that is explicitly null', () => {
+  test('can find rows in a table with a json value that is explicitly null', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ blob: { some: { $eq: null } } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some}' IS NULL`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some}' IS NULL`)
   })
 
-  it('can find rows in a table with a column that is not null', () => {
+  test('can find rows in a table with a column that is not null', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ unknown: { $ne: null } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "unknown" IS NOT NULL`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "unknown" IS NOT NULL`)
   })
 
-  it('can find rows in a table with a json value that is not null', () => {
+  test('can find rows in a table with a json value that is not null', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ blob: { some: { $ne: null } } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some}' IS NOT NULL`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some}' IS NOT NULL`)
   })
 
-  it('can use the $gt operator', () => {
+  test('can use the $gt operator', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ pets: { $gt: 1 } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "pets" > 1`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "pets" > 1`)
   })
 
-  it('can use the $gt operator on a json column', () => {
+  test('can use the $gt operator on a json column', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ blob: { some: { value: { $gt: 5 } } } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some,value}' > 5`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some,value}' > 5`)
   })
 
-  it('can use the $gte operator', () => {
+  test('can use the $gte operator', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ pets: { $gte: 1 } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "pets" >= 1`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "pets" >= 1`)
   })
 
-  it('can use the $gte operator on a json column', () => {
+  test('can use the $gte operator on a json column', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ blob: { some: { value: { $gte: 5 } } } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some,value}' >= 5`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some,value}' >= 5`)
   })
 
-  it('can use the $lt operator', () => {
+  test('can use the $lt operator', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ pets: { $lt: 1 } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "pets" < 1`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "pets" < 1`)
   })
 
-  it('can use the $lt operator on a json column', () => {
+  test('can use the $lt operator on a json column', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ blob: { some: { value: { $lt: 5 } } } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some,value}' < 5`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some,value}' < 5`)
   })
 
-  it('can use the $lte operator', () => {
+  test('can use the $lte operator', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ pets: { $lte: 1 } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "pets" <= 1`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "pets" <= 1`)
   })
 
-  it('can use the $lte operator on a json column', () => {
+  test('can use the $lte operator on a json column', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ blob: { some: { value: { $lte: 5 } } } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some,value}' <= 5`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some,value}' <= 5`)
   })
 
-  it('can use the $ne operator', () => {
+  test('can use the $ne operator', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ pets: { $ne: 1 } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "pets" != 1`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "pets" != 1`)
   })
 
-  it('can use the $ne operator on a json column', () => {
+  test('can use the $ne operator on a json column', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ blob: { some: { value: { $ne: 5 } } } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some,value}' != 5`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some,value}' != 5`)
   })
 
-  it('can use the $eq operator', () => {
+  test('can use the $eq operator', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ pets: { $eq: 1 } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "pets" = 1`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "pets" = 1`)
   })
 
-  it('can use the $eq operator on a json column', () => {
+  test('can use the $eq operator on a json column', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ blob: { some: { value: { $eq: 5 } } } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some,value}' = 5`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some,value}' = 5`)
   })
 
-  it('can use the $in operator', () => {
+  test('can use the $in operator', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ pets: { $in: [1, 2, 3] } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "pets" IN (1,2,3)`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "pets" IN (1,2,3)`)
   })
 
-  it('can use the $in operator on a json column', () => {
+  test('can use the $in operator on a json column', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ blob: { some: { value: { $in: [1, 2, 3] } } } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some,value}' IN (1,2,3)`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some,value}' IN (1,2,3)`)
   })
 
-  it('can use the $nin operator', () => {
+  test('can use the $nin operator', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ pets: { $nin: [1, 3] } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "pets" NOT IN (1,3)`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "pets" NOT IN (1,3)`)
   })
 
-  it('can use the $nin operator on a json column', () => {
+  test('can use the $nin operator on a json column', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ blob: { some: { value: { $nin: [1, 2, 3] } } } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some,value}' NOT IN (1,2,3)`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some,value}' NOT IN (1,2,3)`)
   })
 
-  it('can use the $like operator', () => {
+  test('can use the $like operator', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ user_name: { $like: 'test' } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "user_name" LIKE 'test'`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "user_name" LIKE 'test'`)
   })
 
-  it('can use the $like operator on a json column', () => {
+  test('can use the $like operator on a json column', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ blob: { some: { value: { $like: 'test' } } } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some,value}' LIKE 'test'`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some,value}' LIKE 'test'`)
   })
 
-  it('can use the $nlike operator', () => {
+  test('can use the $nlike operator', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ user_name: { $nlike: 'test' } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "user_name" NOT LIKE 'test'`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "user_name" NOT LIKE 'test'`)
   })
 
-  it('can use the $nlike operator on a json column', () => {
+  test('can use the $nlike operator on a json column', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.find({ blob: { some: { value: { $nlike: 'test' } } } })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some,value}' NOT LIKE 'test'`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "blob"#>>'{some,value}' NOT LIKE 'test'`)
   })
 })
 
-describe('findOne', () => {
-  it('can find a single row', () => {
+test('findOne', async () =>  {
+  test('can find a single row', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.findOne()
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users"`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users"`)
   })
 
-  it('can find a single row with a condition', () => {
+  test('can find a single row with a condition', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.findOne({ id: 0 })
-    expect(query).to.equal(`SELECT ${db.users._formatColumns()} FROM "users" WHERE "id" = 0`)
+    t.equal(query, `SELECT ${db.users._formatColumns()} FROM "users" WHERE "id" = 0`)
   })
 })
 
-describe('insert', () => {
-  it('can insert a row', () => {
+test('insert', async () =>  {
+  test('can insert a row', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.insert({ id: 0, invalid: 'key', user_name: 'test', blob: { some: 'data' } })
-    expect(query).to.equal(`INSERT INTO "users" ("id","user_name","blob") VALUES (0,'test','{"some":"data"}') RETURNING ${db.users._formatColumns()}`)
+    t.equal(query, `INSERT INTO "users" ("id","user_name","blob") VALUES (0,'test','{"some":"data"}') RETURNING ${db.users._formatColumns()}`)
   })
 
-  it('can insert a row with an empty array cast to the correct type', () => {
+  test('can insert a row with an empty array cast to the correct type', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.insert({ id: 0, user_name: 'test', pet_names: [] })
-    expect(query).to.equal(`INSERT INTO "users" ("id","user_name","pet_names") VALUES (0,'test','{}'::text[]) RETURNING ${db.users._formatColumns()}`)
+    t.equal(query, `INSERT INTO "users" ("id","user_name","pet_names") VALUES (0,'test','{}'::text[]) RETURNING ${db.users._formatColumns()}`)
   })
 
-  it('can insert a row with a populated array cast to the correct type', () => {
+  test('can insert a row with a populated array cast to the correct type', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.insert({ id: 0, user_name: 'test', pet_names: ['fluffy', 'spike'] })
-    expect(query).to.equal(`INSERT INTO "users" ("id","user_name","pet_names") VALUES (0,'test',array['fluffy','spike']::text[]) RETURNING ${db.users._formatColumns()}`)
+    t.equal(query, `INSERT INTO "users" ("id","user_name","pet_names") VALUES (0,'test',array['fluffy','spike']::text[]) RETURNING ${db.users._formatColumns()}`)
   })
 
-  it('can set created_at and updated_at implicitly when creating a row', () => {
+  test('can set created_at and updated_at implicitly when creating a row', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.entries.insert({ value: 'test' })
     const matcher = new RegExp(`INSERT INTO "entries" \\("value","created_at","updated_at"\\) VALUES \\('test','[^']+','[^']+'\\) RETURNING ${db.entries._formatColumns()}`)
-    expect(query).to.match(matcher)
+    t.match(query, matcher)
   })
 
-  it('can set an encrypted value and not return it by default', () => {
+  test('can set an encrypted value and not return it by default', async (t) =>  {
     const db = new Muckraker(Object.assign({}, internals, { encrypt: { 'entries.value': 'somekey' } }))
     const query = db.entries.insert({ value: 'test' })
     const matcher = new RegExp(`INSERT INTO "entries" \\("value","created_at","updated_at"\\) VALUES \\(pgp_sym_encrypt\\('test','somekey','cipher-algo=aes256'\\),'[^']+','[^']+'\\) RETURNING ${db.entries._formatColumns()}`)
-    expect(query).to.match(matcher)
+    t.match(query, matcher)
   })
 
-  it('can set an encrypted value and return it', () => {
+  test('can set an encrypted value and return it', async (t) =>  {
     const db = new Muckraker(Object.assign({}, internals, { encrypt: { 'entries.value': 'somekey' } }))
     const query = db.entries.insert({ value: 'test' }, Object.keys(db.entries._columns))
     const formattedColumns = db.entries._formatColumns(Object.keys(db.entries._columns)).map((column) => {
@@ -323,146 +320,146 @@ describe('insert', () => {
     })
 
     const matcher = new RegExp(`INSERT INTO "entries" \\("value","created_at","updated_at"\\) VALUES \\(pgp_sym_encrypt\\('test','somekey','cipher-algo=aes256'\\),'[^']+','[^']+'\\) RETURNING ${formattedColumns}`)
-    expect(query).to.match(matcher)
+    t.match(query, matcher)
   })
 
-  it('can set an encrypted value with a non-default cipher', () => {
+  test('can set an encrypted value with a non-default cipher', async (t) =>  {
     const db = new Muckraker(Object.assign({}, internals, { encrypt: { 'entries.value': 'somekey' }, cipher: 'aes192' }))
     const query = db.entries.insert({ value: 'test' })
     const matcher = new RegExp(`INSERT INTO "entries" \\("value","created_at","updated_at"\\) VALUES \\(pgp_sym_encrypt\\('test','somekey','cipher-algo=aes192'\\),'[^']+','[^']+'\\) RETURNING ${db.entries._formatColumns()}`)
-    expect(query).to.match(matcher)
+    t.match(query, matcher)
   })
 })
 
-describe('destroy', () => {
-  it('can delete a row', () => {
+test('destroy', async () =>  {
+  test('can delete a row', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.destroy()
-    expect(query).to.equal('DELETE FROM "users"')
+    t.equal(query, 'DELETE FROM "users"')
   })
 
-  it('can delete a row with a condition', () => {
+  test('can delete a row with a condition', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.destroy({ id: 0 })
-    expect(query).to.equal('DELETE FROM "users" WHERE "id" = 0')
+    t.equal(query, 'DELETE FROM "users" WHERE "id" = 0')
   })
 
-  it('can soft delete a row', () => {
+  test('can soft delete a row', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.entries.destroy({ id: 0 })
-    expect(query).to.match(/^UPDATE "entries" SET "deleted_at" = '([^)]+)' WHERE "id" = 0$/)
+    t.match(query, /^UPDATE "entries" SET "deleted_at" = '([^)]+)' WHERE "id" = 0$/)
   })
 })
 
-describe('update', () => {
-  it('can update a row', () => {
+test('update', async () =>  {
+  test('can update a row', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.update({ id: 0, invalid: 'key', blob: { some: 'thing' } }, { user_name: 'test_user', invalid: 'key', blob: { another: 'thing' } })
-    expect(query).to.equal(`UPDATE "users" SET "user_name" = 'test_user', "blob" = '{"another":"thing"}' WHERE "id" = 0 AND "blob"#>>'{some}' = 'thing' RETURNING ${db.users._formatColumns()}`)
+    t.equal(query, `UPDATE "users" SET "user_name" = 'test_user', "blob" = '{"another":"thing"}' WHERE "id" = 0 AND "blob"#>>'{some}' = 'thing' RETURNING ${db.users._formatColumns()}`)
   })
 
-  it('can update a row without a query', () => {
+  test('can update a row without a query', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.update(null, { user_name: 'test_user' })
-    expect(query).to.equal(`UPDATE "users" SET "user_name" = 'test_user' RETURNING ${db.users._formatColumns()}`)
+    t.equal(query, `UPDATE "users" SET "user_name" = 'test_user' RETURNING ${db.users._formatColumns()}`)
   })
 
-  it('can set the updated_at column implicitly if it exists', () => {
+  test('can set the updated_at column implicitly if it exists', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.entries.update({ value: 'test' }, { value: 'different test' })
     const matcher = new RegExp(`UPDATE "entries" SET "value" = 'different test', "updated_at" = '[^']+' WHERE "value" = 'test' AND "deleted_at" IS NULL RETURNING ${db.entries._formatColumns()}`)
-    expect(query).to.match(matcher)
+    t.match(query, matcher)
   })
 })
 
-describe('updateOne', () => {
-  it('can update a row', () => {
+test('updateOne', async () =>  {
+  test('can update a row', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.updateOne({ id: 0 }, { user_name: 'test_user' })
-    expect(query).to.equal(`UPDATE "users" SET "user_name" = 'test_user' WHERE "id" = 0 RETURNING ${db.users._formatColumns()}`)
+    t.equal(query, `UPDATE "users" SET "user_name" = 'test_user' WHERE "id" = 0 RETURNING ${db.users._formatColumns()}`)
   })
 
-  it('can update a row without a query', () => {
+  test('can update a row without a query', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.updateOne(null, { user_name: 'test_user' })
-    expect(query).to.equal(`UPDATE "users" SET "user_name" = 'test_user' RETURNING ${db.users._formatColumns()}`)
+    t.equal(query, `UPDATE "users" SET "user_name" = 'test_user' RETURNING ${db.users._formatColumns()}`)
   })
 })
 
-describe('scripts', () => {
-  it('can run a script', () => {
+test('scripts', async () =>  {
+  test('can run a script', async (t) =>  {
     const db = new Muckraker(Object.assign({}, internals, { scriptDir: Path.join(__dirname, 'db') }))
     const query = db.another_thing()
-    expect(query).to.equal('SELECT * FROM "users"')
+    t.equal(query, 'SELECT * FROM "users"')
   })
 
-  it('can run a script that returns a single result', () => {
+  test('can run a script that returns a single result', async (t) =>  {
     const db = new Muckraker(Object.assign({}, internals, { scriptDir: Path.join(__dirname, 'db') }))
     const query = db.row()
-    expect(query).to.equal('SELECT * FROM "users"')
+    t.equal(query, 'SELECT * FROM "users"')
   })
 
-  it('can run a namespaced script', () => {
+  test('can run a namespaced script', async (t) =>  {
     const db = new Muckraker(Object.assign({}, internals, { scriptDir: Path.join(__dirname, 'db') }))
     const query = db.users.random()
-    expect(query).to.equal('SELECT * FROM "users"')
+    t.equal(query, 'SELECT * FROM "users"')
   })
 
-  it('can run a namespaced script when the table has underscores', () => {
+  test('can run a namespaced script when the table has underscores', async (t) =>  {
     const db = new Muckraker(Object.assign({}, internals, { scriptDir: Path.join(__dirname, 'db') }))
     const query = db.with_underscores.row()
-    expect(query).to.equal('SELECT * FROM "users"')
+    t.equal(query, 'SELECT * FROM "users"')
   })
 
-  it('can run a namespaced script that returns a single result', () => {
+  test('can run a namespaced script that returns a single result', async (t) =>  {
     const db = new Muckraker(Object.assign({}, internals, { scriptDir: Path.join(__dirname, 'db') }))
     const query = db.users.leader()
-    expect(query).to.equal('SELECT * FROM "users"')
+    t.equal(query, 'SELECT * FROM "users"')
   })
 })
 
-describe('routines', () => {
-  it('can run a routine', () => {
+test('routines', async () =>  {
+  test('can run a routine', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.something_random()
-    expect(query.q).to.equal('something_random')
+    t.equal(query.q, 'something_random')
   })
 
-  it('can run a scoped routine', () => {
+  test('can run a scoped routine', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.self()
-    expect(query.q).to.equal('users_self')
+    t.equal(query.q, 'users_self')
   })
 
-  it('can run a scoped routine that returns a single result', () => {
+  test('can run a scoped routine that returns a single result', async (t) =>  {
     const db = new Muckraker(internals)
     const query = db.users.person()
-    expect(query.q).to.equal('users_one_person')
+    t.equal(query.q, 'users_one_person')
   })
 })
 
-describe('transactions', () => {
-  it('txMode exists', () => {
+test('transactions', async () =>  {
+  test('txMode exists', async (t) =>  {
     const db = new Muckraker(internals)
-    expect(db.txMode).to.exist()
+    t.ok(db.txMode)
   })
 
-  it('can run a transaction', () => {
+  test('can run a transaction', async (t) =>  {
     const db = new Muckraker(internals)
-    return db.tx((t) => {
-      expect(t._db._txopts).to.equal({})
-      const query = t.query('SELECT * FROM "users"')
-      expect(query).to.equal('SELECT * FROM "users"')
+    return db.tx((d) => {
+      t.same(d._db._txopts, {})
+      const query = d.query('SELECT * FROM "users"')
+      t.equal(query, 'SELECT * FROM "users"')
     })
   })
 
-  it('can run a transaction with options', () => {
+  test('can run a transaction with options', async (t) =>  {
     const db = new Muckraker(internals)
     const opts = { test: true }
-    return db.tx(opts, (t) => {
-      expect(t._db._txopts).to.equal(opts)
-      const query = t.query('SELECT * FROM "users"')
-      expect(query).to.equal('SELECT * FROM "users"')
+    return db.tx(opts, (d) => {
+      t.same(d._db._txopts, opts)
+      const query = d.query('SELECT * FROM "users"')
+      t.equal(query, 'SELECT * FROM "users"')
     })
   })
 })
