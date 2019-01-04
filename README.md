@@ -259,16 +259,4 @@ const db = new Muckraker({
 });
 ```
 
-## REPL
-
-Also included is a repl, called `mr`. To use it run `./node_modules/.bin/mr` with either the name of your database (i.e. 'mydatabase') or a full postgres connection string (i.e. 'postgres://user:password@somehostname/databasename). The repl will automatically connect to your server for you, and provide a `db` variable that contains all of the above methods. Promises will be automatically resolved for you so you can simply run methods and see results.
-
-```
-Connected to mydatabase
-muckraker> db.users.findOne({ id: 0 })
-{ id: 0,
-  user_name: 'test' }
-muckraker> var me = db.users.self(); // you can also assign the results of these methods straight to a variable
-```
-
 ### Special thanks to [arb](https://github.com/arb) for coming up with the name
