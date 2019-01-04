@@ -478,29 +478,6 @@ test('scripts', async () =>  {
   })
 })
 
-test('routines', async () =>  {
-  test('can run a routine', async (t) =>  {
-    const db = new Muckraker(internals)
-    await db.init()
-    const query = db.something_random()
-    t.equal(query.q, 'something_random')
-  })
-
-  test('can run a scoped routine', async (t) =>  {
-    const db = new Muckraker(internals)
-    await db.init()
-    const query = db.users.self()
-    t.equal(query.q, 'users_self')
-  })
-
-  test('can run a scoped routine that returns a single result', async (t) =>  {
-    const db = new Muckraker(internals)
-    await db.init()
-    const query = db.users.person()
-    t.equal(query.q, 'users_one_person')
-  })
-})
-
 test('transactions', async () =>  {
   test('txMode exists', async (t) =>  {
     const db = new Muckraker(internals)
