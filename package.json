@@ -19,7 +19,6 @@
   "author": "Nathan LaFreniere <quitlahok@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "deasync": "^0.1.12",
     "pg-promise": "^8.5.4"
   },
   "devDependencies": {
