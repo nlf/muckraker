@@ -420,6 +420,18 @@ test('scripts', async () =>  {
   })
 })
 
+test('MaybeTable', async () => {
+  test('errors appropriately when a MaybeTable does not resolve to a real table', async (t) => {
+    const db = new Muckraker(Object.assign({}, internals, { scriptDir: Path.join(__dirname, 'db') }))
+    try {
+      const query = await db.bananas.find()
+      t.fail('should not be reached')
+    } catch (err) {
+      t.equal(err.message, 'Unknown table "bananas"')
+    }
+  })
+})
+
 test('transactions', async () =>  {
   test('txMode exists', async (t) =>  {
     const db = new Muckraker(internals)
