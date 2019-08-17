@@ -3,9 +3,7 @@
   "version": "4.1.0",
   "description": "a lightweight wrapper around pg-promise",
   "main": "lib/index.js",
-  "bin": {
-    "mr": "bin/mr"
-  },
+  "bin": {},
   "scripts": {
     "lint": "standard",
     "lint:fix": "standard --fix",
@@ -19,6 +17,8 @@
   "author": "Nathan LaFreniere <quitlahok@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "js-yaml": "^3.12.1",
+    "keyfob": "^1.0.0",
     "pg-promise": "^8.5.4"
   },
   "devDependencies": {

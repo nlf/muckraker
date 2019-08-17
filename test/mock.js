@@ -7,7 +7,7 @@ class MockPG {
     this.fail = fail
   }
 
-  query (q, p) {
+  async query (q, p) {
     if (this.fail) {
       return Promise.reject(new Error('Failed to connect'))
     }
@@ -34,28 +34,33 @@ class MockPG {
     return PG.as.format(q, p)
   }
 
-  any (q, p) {
+  async any (q, p) {
     return PG.as.format(q, p)
   }
 
-  one (q, p) {
+  async one (q, p) {
     return PG.as.format(q, p)
   }
 
-  oneOrNone () {
+  async oneOrNone () {
     return this.one.apply(this, arguments)
   }
 
-  none (q, p) {
+  async none (q, p) {
     return PG.as.format(q, p)
   }
 
-  func (q, params, mask) {
+  async func (q, params, mask) {
     return { q, params, mask }
   }
 
-  tx (opts, fn) {
+  async tx (opts, fn) {
     this._txopts = opts // Set so we can find it in tests
+    return fn(this)
+  }
+
+  async task (tag, fn) {
+    this._tag = tag
     return fn(this)
   }
 }

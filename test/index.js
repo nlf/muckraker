@@ -38,7 +38,7 @@ test('constructor', async () => {
 test('query', async () => {
   test('can send a raw query', async (t) => {
     const db = new Muckraker(internals)
-    const query = db.query('SELECT * FROM "users"')
+    const query = await db.query('SELECT * FROM "users"')
     t.equal(query, 'SELECT * FROM "users"')
   })
 })
@@ -402,6 +402,7 @@ test('scripts', async () =>  {
 
   test('can run a namespaced script', async (t) =>  {
     const db = new Muckraker(Object.assign({}, internals, { scriptDir: Path.join(__dirname, 'db') }))
+    await new Promise(resolve => setImmediate(resolve))
     const query = await db.users.random()
     t.equal(query, 'SELECT * FROM "users"')
   })
@@ -427,9 +428,9 @@ test('transactions', async () =>  {
 
   test('can run a transaction', async (t) =>  {
     const db = new Muckraker(internals)
-    return db.tx((d) => {
+    return db.tx(async (d) => {
       t.same(d._db._txopts, {})
-      const query = d.query('SELECT * FROM "users"')
+      const query = await d.query('SELECT * FROM "users"')
       t.equal(query, 'SELECT * FROM "users"')
     })
   })
@@ -437,9 +438,9 @@ test('transactions', async () =>  {
   test('can run a transaction with options', async (t) =>  {
     const db = new Muckraker(internals)
     const opts = { test: true }
-    return db.tx(opts, (d) => {
+    return db.tx(opts, async (d) => {
       t.same(d._db._txopts, opts)
-      const query = d.query('SELECT * FROM "users"')
+      const query = await d.query('SELECT * FROM "users"')
       t.equal(query, 'SELECT * FROM "users"')
     })
   })
