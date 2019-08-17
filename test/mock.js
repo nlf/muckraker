@@ -60,6 +60,10 @@ class MockPG {
   }
 
   async task (tag, fn) {
+    if (!fn) {
+      fn = tag
+      tag = null
+    }
     this._tag = tag
     return fn(this)
   }

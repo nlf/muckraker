@@ -457,3 +457,23 @@ test('transactions', async () =>  {
     })
   })
 })
+
+test('tasks', async () => {
+  test('can run a tagged task', async (t) => {
+    const db = new Muckraker(internals)
+    return db.task('some-tag', async (d) => {
+      t.equal(d._tag, 'some-tag')
+      const query = await d.query('SELECT * FROM "users"')
+      t.equal(query, 'SELECT * FROM "users"')
+    })
+  })
+
+  test('can run a task without a tag', async (t) => {
+    const db = new Muckraker(internals)
+    return db.task(async (d) => {
+      t.same(d._tag, null)
+      const query = await d.query('SELECT * FROM "users"')
+      t.equal(query, 'SELECT * FROM "users"')
+    })
+  })
+})
