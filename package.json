@@ -17,8 +17,8 @@
   "author": "Nathan LaFreniere <quitlahok@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "js-yaml": "^3.12.1",
-    "keyfob": "^1.0.0",
+    "js-yaml": "^3.13.1",
+    "keyfob": "^2.0.1",
     "pg-promise": "^8.5.4"
   },
   "devDependencies": {
