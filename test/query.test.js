@@ -33,13 +33,13 @@ describe('#find()', () => {
   test('can return a property from a json column', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({}, ['id', ['blob', 'some', 'path']])
-    expect(query).toEqual('SELECT "id","blob"#>>\'{some,path}\' AS "path" FROM "users"')
+    expect(query).toEqual(`SELECT "id","blob"#>>'{some,path}' AS "path" FROM "users"`)
   })
 
   test('ignores json properties on columns that are not json', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({}, ['id', ['blob', 'some', 'path'], ['user_name', 'junk']])
-    expect(query).toEqual('SELECT "id","blob"#>>\'{some,path}\' AS "path" FROM "users"')
+    expect(query).toEqual(`SELECT "id","blob"#>>'{some,path}' AS "path" FROM "users"`)
   })
 
   test('defaults to adding a NOT NULL clause on "deleted_at" when column exists', async () => {

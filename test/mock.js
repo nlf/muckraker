@@ -13,7 +13,7 @@ class MockPG {
       return Promise.reject(new Error('Failed to connect'))
     }
 
-    if (q === 'SELECT table_name,column_name,udt_name::regtype as data_type,column_default,is_nullable FROM information_schema.columns WHERE table_schema = \'public\'') {
+    if (q === `SELECT table_name,column_name,udt_name::regtype as data_type,column_default,is_nullable FROM information_schema.columns WHERE table_schema = 'public'`) {
       return Promise.resolve([
         { table_name: 'users', column_name: 'id', data_type: 'uuid', column_default: 'uuid_generate_v4()', is_nullable: 'NO' },
         { table_name: 'users', column_name: 'user_name', data_type: 'text', column_default: null, is_nullable: 'YES' },
