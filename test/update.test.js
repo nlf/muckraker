@@ -22,6 +22,13 @@ describe('#update()', () => {
     const matcher = new RegExp(`UPDATE "entries" SET "value" = 'different test', "updated_at" = '[^']+' WHERE "value" = 'test' AND "deleted_at" IS NULL RETURNING ${db.entries._formatColumns()}`)
     expect(query).toMatch(matcher)
   })
+
+  test('can use a different updated_at column', async () => {
+    const db = new Muckraker(Object.assign({}, getOptions(), { timestamps: { updated: 'updated', deleted: 'deleted' } }))
+    const query = await db.articles.update({ id: 5 }, { id: 1 })
+    const matcher = new RegExp(`UPDATE "articles" SET "id" = 1, "updated" = '[^']+' WHERE "id" = 5 AND "deleted" IS NULL RETURNING ${db.articles._formatColumns()}`)
+    expect(query).toMatch(matcher)
+  })
 })
 
 describe('#updateOne()', () => {

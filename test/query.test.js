@@ -48,6 +48,12 @@ describe('#find()', () => {
     expect(query).toEqual(`SELECT ${db.entries._formatColumns()} FROM "entries" WHERE "deleted_at" IS NULL`)
   })
 
+  test('can override the "deleted_at" column name', async () => {
+    const db = new Muckraker(Object.assign({}, getOptions(), { timestamps: { deleted: 'deleted' } }))
+    const query = await db.articles.find()
+    expect(query).toEqual(`SELECT ${db.articles._formatColumns()} FROM "articles" WHERE "deleted" IS NULL`)
+  })
+
   test('allows ignoring default NOT NULL clause on "deleted_at"', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.entries.find({ deleted_at: { $ne: null } })

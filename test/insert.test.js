@@ -29,6 +29,13 @@ describe('#insert()', () => {
     expect(query).toMatch(matcher)
   })
 
+  test('can override created_at and updated_at column names', async () => {
+    const db = new Muckraker(Object.assign({}, getOptions(), { timestamps: { created: 'created', updated: 'updated' } }))
+    const query = await db.articles.insert({ id: 10 })
+    const matcher = new RegExp(`INSERT INTO "articles" \\("id","created","updated"\\) VALUES \\(10,'[^']+','[^']+'\\) RETURNING ${db.articles._formatColumns()}`)
+    expect(query).toMatch(matcher)
+  })
+
   test('can set an encrypted value and not return it by default', async () =>  {
     const db = new Muckraker(Object.assign({}, getOptions(), { encrypt: { 'entries.value': 'somekey' } }))
     const query = await db.entries.insert({ value: 'test' })

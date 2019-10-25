@@ -28,7 +28,11 @@ class MockPG {
         { table_name: 'entries', column_name: 'deleted_at', data_type: 'timestamp with time zone', column_default: null, is_nullable: 'YES' },
         { table_name: 'entries', column_name: 'id', data_type: 'integer', column_default: null, is_nullable: 'YES' },
         { table_name: 'entries', column_name: 'value', data_type: 'text', column_default: null, is_nullable: 'YES' },
-        { table_name: 'with_underscores', column_name: 'id', data_type: 'integer', column_default: null, is_nullable: 'NO' }
+        { table_name: 'with_underscores', column_name: 'id', data_type: 'integer', column_default: null, is_nullable: 'NO' },
+        { table_name: 'articles', column_name: 'deleted', data_type: 'timestamp with time zone', column_default: null, is_nullable: 'YES' },
+        { table_name: 'articles', column_name: 'updated', data_type: 'timestamp with time zone', column_default: null, is_nullable: 'YES' },
+        { table_name: 'articles', column_name: 'created', data_type: 'timestamp with time zone', column_default: null, is_nullable: 'YES' },
+        { table_name: 'articles', column_name: 'id', data_type: 'integer', column_default: null, is_nullable: 'NO' }
       ])
     }
 
