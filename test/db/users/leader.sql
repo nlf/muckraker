@@ -1,4 +1,5 @@
 ---
+name: leader
 returns: one || none
 ---
 

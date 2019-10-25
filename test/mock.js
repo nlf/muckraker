@@ -5,6 +5,7 @@ const PG = require('pg-promise')
 class MockPG {
   constructor (fail) {
     this.fail = fail
+    this.PG = PG
   }
 
   async query (q, p) {
@@ -50,20 +51,12 @@ class MockPG {
     return PG.as.format(q, p)
   }
 
-  async func (q, params, mask) {
-    return { q, params, mask }
-  }
-
   async tx (opts, fn) {
     this._txopts = opts // Set so we can find it in tests
     return fn(this)
   }
 
   async task (tag, fn) {
-    if (!fn) {
-      fn = tag
-      tag = null
-    }
     this._tag = tag
     return fn(this)
   }

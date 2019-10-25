@@ -7,7 +7,7 @@
   "scripts": {
     "lint": "standard",
     "lint:fix": "standard --fix",
-    "test": "tap --cov test/index.js"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -22,7 +22,18 @@
     "pg-promise": "^8.5.4"
   },
   "devDependencies": {
-    "standard": "^12.0.1",
-    "tap": "^12.1.1"
+    "jest": "^24.9.0",
+    "standard": "^14.3.1"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "coverageThreshold": {
+      "global": {
+        "lines": 100,
+        "branches": 100,
+        "function": 100,
+        "statements": 100
+      }
+    }
   }
 }
