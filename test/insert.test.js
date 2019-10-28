@@ -37,14 +37,14 @@ describe('#insert()', () => {
   })
 
   test('can set an encrypted value and not return it by default', async () =>  {
-    const db = new Muckraker(Object.assign({}, getOptions(), { encrypt: { 'entries.value': 'somekey' } }))
+    const db = new Muckraker(Object.assign({}, getOptions(), { encrypt: { 'entries.value': { key: 'somekey' } } }))
     const query = await db.entries.insert({ value: 'test' })
     const matcher = new RegExp(`INSERT INTO "entries" \\("value","created_at","updated_at"\\) VALUES \\(pgp_sym_encrypt\\('test','somekey','cipher-algo=aes256'\\),'[^']+','[^']+'\\) RETURNING ${db.entries._builder.getColumnNames()}`)
     expect(query).toMatch(matcher)
   })
 
   test('can set an encrypted value and return it', async () =>  {
-    const db = new Muckraker(Object.assign({}, getOptions(), { encrypt: { 'entries.value': 'somekey' } }))
+    const db = new Muckraker(Object.assign({}, getOptions(), { encrypt: { 'entries.value': { key: 'somekey' } } }))
     const query = await db.entries.insert({ value: 'test' }, ['created_at', 'updated_at', 'deleted_at', 'id', 'value'])
     const formattedColumns = db.entries._builder.getColumnNames(Object.keys(db.entries._columns)).map((column) => {
       if (column.startsWith('pgp_sym')) {
@@ -58,10 +58,17 @@ describe('#insert()', () => {
     expect(query).toMatch(matcher)
   })
 
-  test('can set an encrypted value with a non-default cipher', async () =>  {
-    const db = new Muckraker(Object.assign({}, getOptions(), { encrypt: { 'entries.value': 'somekey' }, cipher: 'aes192' }))
+  test('can set an encrypted value with a non-default (global) cipher', async () =>  {
+    const db = new Muckraker(Object.assign({}, getOptions(), { encrypt: { 'entries.value': { key: 'somekey' }, cipher: 'aes192' } }))
     const query = await db.entries.insert({ value: 'test' })
     const matcher = new RegExp(`INSERT INTO "entries" \\("value","created_at","updated_at"\\) VALUES \\(pgp_sym_encrypt\\('test','somekey','cipher-algo=aes192'\\),'[^']+','[^']+'\\) RETURNING ${db.entries._builder.getColumnNames()}`)
+    expect(query).toMatch(matcher)
+  })
+
+  test('can set an encrypted value with a non-default cipher', async () =>  {
+    const db = new Muckraker(Object.assign({}, getOptions(), { encrypt: { 'entries.value': { key: 'somekey', cipher: 'aes512' }, cipher: 'aes192' } }))
+    const query = await db.entries.insert({ value: 'test' })
+    const matcher = new RegExp(`INSERT INTO "entries" \\("value","created_at","updated_at"\\) VALUES \\(pgp_sym_encrypt\\('test','somekey','cipher-algo=aes512'\\),'[^']+','[^']+'\\) RETURNING ${db.entries._builder.getColumnNames()}`)
     expect(query).toMatch(matcher)
   })
 })

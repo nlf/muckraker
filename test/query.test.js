@@ -48,8 +48,14 @@ describe('#find()', () => {
     expect(query).toEqual(`SELECT ${db.entries._builder.getColumnNames()} FROM "entries" WHERE "deleted_at" IS NULL`)
   })
 
-  test('can override the "deleted_at" column name', async () => {
+  test('can override the "deleted_at" column name globally', async () => {
     const db = new Muckraker(Object.assign({}, getOptions(), { timestamps: { deleted: 'deleted' } }))
+    const query = await db.articles.find()
+    expect(query).toEqual(`SELECT ${db.articles._builder.getColumnNames()} FROM "articles" WHERE "deleted" IS NULL`)
+  })
+
+  test('can override the "deleted_at" column name per table', async () => {
+    const db = new Muckraker(Object.assign({}, getOptions(), { timestamps: { deleted: 'really_deleted', articles: { deleted: 'deleted' } } }))
     const query = await db.articles.find()
     expect(query).toEqual(`SELECT ${db.articles._builder.getColumnNames()} FROM "articles" WHERE "deleted" IS NULL`)
   })
