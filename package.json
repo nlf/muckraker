@@ -3,11 +3,11 @@
   "version": "4.1.0",
   "description": "a lightweight wrapper around pg-promise",
   "main": "lib/index.js",
-  "bin": {
-    "mr": "bin/mr"
-  },
+  "bin": {},
   "scripts": {
-    "test": "lab -a code -L -t 100"
+    "lint": "standard",
+    "lint:fix": "standard --fix",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -17,13 +17,23 @@
   "author": "Nathan LaFreniere <quitlahok@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "deasync": "^0.1.12",
-    "pg-promise": "^7.3.2"
+    "js-yaml": "^3.13.1",
+    "keyfob": "^2.0.1",
+    "pg-promise": "^8.5.4"
   },
   "devDependencies": {
-    "code": "^5.1.2",
-    "eslint-config-andyet": "^2.0.0",
-    "eslint-plugin-hapi": "^4.0.0",
-    "lab": "^15.1.2"
+    "jest": "^24.9.0",
+    "standard": "^14.3.1"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "coverageThreshold": {
+      "global": {
+        "lines": 100,
+        "branches": 100,
+        "function": 100,
+        "statements": 100
+      }
+    }
   }
 }
