@@ -1,104 +1,42 @@
 # Muckraker
 
-Muckraker is a thin wrapper around the [pg-promise](https://github.com/vitaly-t/pg-promise) library to provide some common methods in a simple way.
+Muckraker is a wrapper around the [pg-promise](https://github.com/vitaly-t/pg-promise) library to provide some simple, easily extensable, functionality out of the box.
 
-It will inspect your tables when instantiated and provide a few simple CRUD methods for each within a namespace.
+## `new Muckraker(options)`
 
-```javascript
-'use strict';
+The `options` object may contain the following:
 
-// in this example a 'users' table exists
+- `connection`: Postgres configuration object passed through directly to the `pg` library.
+- `pg`: Configuration passed directly to the `pg-promise` library.
+- `scriptDir`: Path to the directory containing all of your `.sql` and `.js` scripts. More on this [below](#scripts).
+- `timestamps`: Configuration for the timestamp columns. More on this [below](#automatic-timestamps).
+- `encrypt`: Encryption options. More on this [below](#encryption).
 
-const Muckraker = require('muckraker');
-const db = new Muckraker({
-  connection: { // passes through to the pg library
-    host: 'localhost',
-    database: 'my_app'
-  }
-});
+### `muckraker.query()`
 
-// the 'db' object will now have a 'users' property corresponding to the existing table
-// db.users.find(q) return an array of users, optionally passing 'q' as a WHERE clause
-// db.users.findOne(q) returns a single user, again optionally passing 'q'
-// db.users.insert(data) inserts the data into the users table and returns the inserted row
-// db.users.update(q, data) updates rows matching q with data and returns an array of all modified rows
-// db.users.updateOne(q, data) updates rows matching q with data and returns a single modified row
-// db.users.destroy(q, options) deletes rows, optionally passing 'q' as a WHERE clause (this method returns no results)
-```
+Execute a query on the root level database. Arguments passed to this method are passed directly to pg-promise's [query method](http://vitaly-t.github.io/pg-promise/Database.html#query)
 
-All of the above functions, except for destroy, also accept a final parameter as an array of column names that you want returned
+### `muckraker.task(tag, fn)`
 
-```javascript
-db.users.find({}, ['id']); // list all users and only return the id column
-```
+Acquire a database connection with a given (optional) tag then run the passed in function `fn` passing the database connection as the first parameter. The connection will be a clone of the root database object, containing the same table and script methods.
 
-If you want to return a property or sub property of a json or jsonb column directly, specify its key as an array with the first item being the name of the column and the rest being the path to the final key. The result will be named after the final key in the array:
+### `muckraker.tx(options, fn)`
 
-```javascript
-db.users.find({}, ['name', ['json_column', 'some', 'deep', 'path']]);
-// this yields: SELECT "name","json_column"#>>'{some,deep,path}' AS "path" FROM "users"
-```
+Acquire a database connection and begin a transaction, then run the passed in function `fn` passing the database connection as the first parameter. The connection will be a clone of the root database object, containing the same table and script methods. After the passed in `fn` completes, the transaction will either be committed or aborted depending on if your function throws an error.
 
-Additionally, muckraker will enumerate any stored functions you have and attach them to the database object namespacing those that match an existing table
+The options available are:
+- `tag`: Similar to the `task` method, used for identification purposes.
+- `mode`: A [TransactionMode](http://vitaly-t.github.io/pg-promise/txMode.TransactionMode.html) object, used to configure the transaction's behavior.
 
-```javascript
-'use strict';
+## Tables
 
-// in this example a 'users' table exists, as well as two stored functions
-// one named 'users_self' and one named 'do_something'
-// since 'users_self' begins with 'users_' and 'users' corresponds to a table, the function
-// will be attached as a property of the db.users object with the 'users_' prefix removed
+In addition to the top level methods, muckraker will create a table object for each table in your database and attach it to the top level object. For example, if you have a database named `users` and another table named `profiles`, your root database object (`db`) will have table objects at `db.users` and `db.profiles`.
 
-const Muckraker = require('muckraker');
-const db = new Muckraker({
-  connection: { // passes through to the pg library
-    host: 'localhost',
-    database: 'my_app'
-  }
-});
+### Query building
 
-// db.users.self() will run the 'users_self' function passing all arguments to the method as an array
-// db.do_something() will run the 'do_something' function, again passing arguments as an array to the function
-```
+Query parameters for each table method are passed as an object. This object may contain any properties you like, though any top level keys that do not match a column in the active table will be ignored. Each property that matches a valid column will add a clause to the `WHERE` portion of a query.
 
-A stored function can also have a prefix of `'one_'` to inform muckraker that the function returns only a single row
-
-```javascript
-// with a routine named users_paid
-db.users.paid() // returns an array
-// with a routine named users_one_self
-db.users.self() // returns a single object
-// with a routine named process_payments
-db.process_payments() // returns an array of results
-// with a routine named one_random_row
-db.random_row() // returns a single object
-```
-
-Sometimes writing long queries can be cumbersome, so muckraker can also load queries from text files and attach those to the database object much like stored functions. These file names will be parsed in the same fashion as stored functions, allowing for table name and `'one_'` prefixes
-
-```javascript
-'use strict';
-
-// in this example a 'users' table exists, as well as a physical directory named 'db'
-// in that directory are two files, 'users_self.sql' and 'do_something.sql'
-// again, since 'users_self' has a prefix matching an existing table, it will be attached
-// as a property on the users object
-// the location of the directory scanned for these scripts defaults to being a 'db' directory in the current working directory
-// it can be configured by passing a 'scriptDir' parameter when creating your instance of Muckraker
-
-const Muckraker = require('muckraker');
-const db = new Muckraker({
-  connection: { // passes through to the pg library
-    host: 'localhost',
-    database: 'my_app'
-  }
-});
-
-// db.users.self() will run the contents of the 'users_self.sql' file passing all arguments to the method as an array
-// db.do_something() will run the contents of the 'do_something.sql' file, again passing arguments as an array
-```
-
-The default comparison for all properties is `=` (equals). Other operators are supported by using an object with the matching key, such as `db.users.find({ column: { $ne: 'test' } })`. Currently available operators are:
+The default comparison, used for any value which is not an object, is `=` (equals). Other operators are supported by using an object with the matching key, such as `db.users.find({ column: { $ne: 'test' } })`. Currently available operators are:
 
 - `$eq` for `=`
 - `$ne` for `!=`
@@ -111,119 +49,67 @@ The default comparison for all properties is `=` (equals). Other operators are s
 - `$like` for `LIKE`
 - `$nlike` for `NOT LIKE`
 
-JSON columns will be automatically resolved to allow deep querying, for example:
+Multiple properties passed together are joined with `AND` statements.
 
-```js
+#### JSON/JSONB columns
 
-// in this example the 'users' table has a 'preferences' column defined as being the 'jsonb' type
+In addition to the above simple queries, a deeper object may be passed representing an operation on a property within a `json` or `jsonb` column. For example:
 
-const Muckraker = require('muckraker');
-const db = new Muckraker({
-  connection: { // passes through to the pg library
-    host: 'localhost',
-    database: 'my_app'
-  }
-});
-
-db.users.find({ preferences: { sendEmails: true } });
-// the above would yield: 'SELECT * FROM "users" WHERE "preferences"#>>'{sendEmails}' = 'true'
-
-// the keys can be as deep as you like
-db.users.find({ preferences: { some: { really: { deep: { property: { $ne: null } } } } } });
-// this would yield: 'SELECT * FROM "users" WHERE "preferences"#>>'{some,really,deep,property}' IS NOT NULL'
+```javascript
+db.users.find({ preferences: { some: { really: { deep: { property: { $ne: null } } } } } })
 ```
 
-## Transactions
+Would yield a query similar to `SELECT * FROM "users" WHERE "preferences"#>>'{some,really,deep,property}' IS NOT NULL`
 
-Transactions are supported with `db.tx([options], callback)` - the callback will be passed an instance of the db which should be used for making queries on the transaction. You should return a promise from the transaction - if it rejects, the transaction will be rolled back. Options are optional.
+#### Result columns
 
-For example:
+Each table method, with the exception of `destroy`, accepts a final parameter `columns`. This parameter is optional and should be an array of column names you wish to have returned. By default, every column in the table that is _not_ encrypted will be returned.
 
-```js
+In order to receive encrypted values you _must_ specify the `columns` parameter and include the name of the encrypted column.
 
-const Muckraker = require('muckraker');
-const db = new Muckraker(
-  connection: { // passes through to the pg library
-    host: 'localhost',
-    database: 'my_app'
-  }
-});
+In addition, you may return a child property of a `json` or `jsonb` column by passing an array to this property representing the path to the key. For example:
 
-db.tx((t) => {
-
-  // t is an instance of the db, configured for the transaction
-  // so you can use all the methods/tables on it that you would for db
-
-  // return a promise to determine whether to commit/rollback the transaction
-  // if either insert here fails, both would be rolled back
-  return t.orgs.insert({ org_name: 'My Org' }).then((org) => {
-    return t.users.insert({
-      name: 'Phil',
-      org_id: org.id
-    })
-  });
-});
+```javascript
+table.find({ public: true }, ['id', ['a-json-column', 'and', 'its', 'key']])
 ```
 
-Options are passed through to the underlying pg-promise method
-[documented here](https://github.com/vitaly-t/pg-promise#configurable-transactions).
+Would return an array of objects with two properties `id` and `key` (named for the final property in the json path chain).
 
-The [Transaction Mode namespace](http://vitaly-t.github.io/pg-promise/txMode.html) is accessible from `db.txMode`.
+#### Automatic timestamps
 
-Example:
+Muckraker will attempt to automatically update known columns for created, updated and deleted timestamps.
 
-```js
-
-const Muckraker = require('muckraker');
-const db = new Muckraker(
-  connection: {
-    host: 'localhost',
-    database: 'my_app'
-  }
-});
-
-const TransactionMode = db.txMode.TransactionMode;
-const isolationLevel = db.txMode.isolationLevel;
-
-const mode = new TransactionMode({
-    tiLevel: isolationLevel.serializable,
-    readOnly: true,
-    deferrable: true
-});
-
-db.tx({ mode }, (t) => {
-
-  // this transaction will now run in a serializable isolation level, readonly, and deferrable
-  return t.orgs.insert({ org_name: 'My Org' }).then((org) => {
-    return t.users.insert({
-      name: 'Phil',
-      org_id: org.id
-    })
-  });
-});
-```
-
-
-## Modification Dates
-
-Muckraker also will attempt to automatically update `created_at` and `updated_at` fields for you when using insert and update/updateOne. When inserting both columns will be set to the current time (assuming the columns exist in your table), when updated the `updated_at` column will be set to the current time.
-
-In addition to that, soft deletes are also available in the form of adding a `deleted_at` column to your table. When this is the case the `destroy()` method will set this column to the current time rather than actually removing the row. The various query methods are also adjusted to default to specifying `"deleted_at" IS NULL` as part of their conditions. You can pass a different value for the `deleted_at` column if you wish to see rows where this value is set, for example `db.users.find({ deleted_at: { $ne: null } })` would give you a list of deleted users.
-
-If you want to hard delete a row that has a `deleted_at` column pass an options object with `force = true` to the destroy method, for example `db.users.destroy({ id: 0 }, { force: true })`.
-
-## Encryption
-
-Muckraker also has some basic support for encryption via the `pgcrypto` extension and its `pgp_sym_encrypt` and `pgp_sym_decrypt` methods. To use it, you must inform muckraker about what columns are encrypted:
+These column names default to `created_at`, `updated_at`, and `deleted_at`. You may change these options both globally as well as specifying them on a per-table basis when initializing the database object. For example:
 
 ```javascript
 const db = new Muckraker({
-  connection: {
-    host: 'localhost',
-    database: 'my_app'
-  },
+  timestamps: {
+    created: 'created_at', // global defaults
+    updated: 'updated_at',
+    deleted: 'deleted_at',
+    users: {
+      created: 'created', // overrides for only the "users" table
+      updated: 'updated',
+      deleted: 'deleted'
+    }
+  }
+})
+```
+
+When using the `insert()` method, both the created and updated timestamps will be set to the current time by default. If you manually specify a value for either as part of your data object that value will take precedence.
+
+When using the `update()` or `updateOne()` methods, the updated timestamp will be set to the current time. Again, if a value for the column is specified it will take precedence.
+
+The deleted timestamp is used to implement soft deletes. By default every query will specify a `WHERE deleted_at IS NULL` clause. This can be overridden by manually specifying an operator for the column, such as `table.find({ deleted_at: { $ne: null } })`. If the deleted column exists, the `destroy()` method will default to populating the column with the current timestamp instead of actually deleting the row. If you wish to forcefully delete, even when typically using soft deletes, you may pass the object `{ force: true }` as the second parameter to the `destroy()` method. For example: `table.destroy({ id: 0 }, { force: true })`.
+
+#### Encryption
+
+Muckraker has some basic support for encryption via the `pgcrypto` extension and its `pgp_sym_encrypt` and `pgp_sym_decrypt` methods. To use it, you must inform muckraker about what columns are encrypted:
+
+```javascript
+const db = new Muckraker({
   encrypt: {
-    'users.secret': 'some_secret_key'
+    'users.secret': { key: 'some_secret_key' }
   }
 });
 ```
@@ -244,19 +130,84 @@ db.users.findOne({ name: 'test' }, ['name', 'secret']);
 // returns { name: 'test', secret: 'some super secret value' }
 ```
 
-The default cipher of `aes256` may be overridden by passing a `cipher` property in the options:
+The default cipher of `aes256` may be overridden globally by passing a `cipher` property in the options, as well as per-column by passing it next to the `key` property:
 
 ```javascript
 const db = new Muckraker({
-  connection: {
-    host: 'localhost',
-    database: 'my_app'
-  },
   encrypt: {
-    'users.secret': 'some_secret_key'
+    'users.secret': { key: 'some_secret_key' }, // uses the default cipher
+    'users.extraSecret': { cipher: 'aes512', key: 'another_secret_key' }, // uses its own cipher
+    cipher: 'aes192' // default
   },
-  cipher: 'aes192'
 });
 ```
 
-### Special thanks to [arb](https://github.com/arb) for coming up with the name
+### `table.find(params, columns)`
+
+Perform a `SELECT` query returning any number of rows.
+
+### `table.findOne(params, columns)`
+
+Perform a `SELECT` query returning either exactly one row, or `null`.
+
+### `table.insert(data, columns)`
+
+Perform an `INSERT` using the given data.
+
+### `table.destroy(params, options)`
+
+Perform a `DELETE`. The `options` object may specify a `force` boolean, which when `true` will perform a hard delete even when a timestamp column representing soft deletes exists.
+
+### `table.update(params, data, columns)`
+
+Perform an `UPDATE` query matching any number of rows using `params` as the `WHERE` and `data` as the new values.
+
+### `table.updateOne(params, data, columns)`
+
+Perform an `UPDATE` query matching either exactly one row, or none using `params` as the `WHERE` and `data` as the new values.
+
+## Scripts
+
+Sometimes writing long queries can be cumbersome, so muckraker can also load queries from both `*.sql` and `*.js` files. By default, these files will be loaded recursively from a directory named `db` in the current working directory at initialization time. You may override this by using the `scriptDir` property passed to the `Muckraker` constructor.
+
+Script files may be located either directly in the `db` directory, which will yield in functions being attached directly to the root database instance, or contained within a directory with a name matching a table which will attach the function to the corresponding table object instead. Scripts contained in directories that do not match a table will be ignored.
+
+When using `*.sql` files, you may use yaml frontmatter to specify some additional configuration items while `*.js` files provide this configuration via properties in an exported object.
+
+A `*.sql` file that returns either exactly one row or `null` might look like:
+
+```
+---
+name: myFunction
+returns: one || none
+---
+
+SELECT * FROM "users" WHERE id = $[id]
+```
+
+While the corresponding `*.js` file could look like:
+
+```javascript
+exports.name = 'myFunction'
+exports.returns = 'one || none'
+exports.query = 'SELECT * FROM "users" WHERE id = $[id]'
+// this query could also be defined as a function like so
+/*
+exports.execute = function (db, { id }) {
+  return db.users.findOne({ id })
+}
+*/
+```
+
+Each script may specify:
+- `name`: A string used to name a given function. If not specified, this defaults to the filename of the script.
+- `returns`: A string describing the number of rows this query is intended to return. Available values are `one`, `many`, `none`, and `any`. Multiple values can be appended using the characters `||`, for example `one || none`. The meaning of each of these values can be found in the [pg-promise docs](http://vitaly-t.github.io/pg-promise/global.html#queryResult)
+- `transaction`: An object describing transaction options. This may also be the value `true` to provide a simple transaction. Available properties on this key are:
+  - `tag`: For identification, defaults to the same value as `name`.
+  - `isolation`: Specify isolation level, see [here](http://vitaly-t.github.io/pg-promise/txMode.html#.isolationLevel) for possible values to be passed as a string.
+  - `readOnly`: A boolean, when `true` specifies the transaction to be `READ ONLY`.
+  - `deferrable`: A boolean, when `true` specifies the transaction to be `DEFERRABLE`.
+
+As well as *one* of the following (note that `*.sql` files pass text after the frontmatter as an implicit `query` property):
+- `execute`: A function to be run. This will be passed exactly two arguments, the first being an instance of the `db`, the second being user specified input.
+- `query`: A string SQL query following the conventions of [pg-promise queries](http://vitaly-t.github.io/pg-promise/formatting.html#.format)
