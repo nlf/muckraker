@@ -41,6 +41,12 @@ describe('scripts', () => {
     expect(query).toEqual('SELECT * FROM "users"')
   })
 
+  test('can run a script that contains yaml-unfriendly characters', async () => {
+    const db = new Muckraker(getOptions())
+    const query = await db.users.yamlBug()
+    expect(query).toEqual(`SELECT\n  json_array_elements(json_extract_path(users.values::json, 'one', 'two')) -> 'banana' #>> '{}' as banana,\n  count(*)\nFROM users`)
+  })
+
   test('ignores when scriptDir does not exist or is not a directory', async () => {
     expect(() => new Muckraker(Object.assign({}, getOptions(), { scriptDir: __filename }))).not.toThrow()
     expect(() => new Muckraker(Object.assign({}, getOptions(), { scriptDir: '/some/file/that/definitely/does/not/exist' }))).not.toThrow()

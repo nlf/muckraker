@@ -20,7 +20,7 @@
   "author": "Nathan LaFreniere <quitlahok@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "js-yaml": "^3.13.1",
+    "front-matter": "^3.1.0",
     "keyfob": "^2.0.1",
     "pg-promise": "^8.5.4"
   },
