@@ -1,3 +1,4 @@
+/* eslint-env jest */
 'use strict'
 
 const Muckraker = require('../')
@@ -8,7 +9,7 @@ describe('MaybeTable', () => {
     const db = new Muckraker(getOptions())
     expect.hasAssertions()
     try {
-      const query = await db.bananas.find()
+      await db.bananas.find()
     } catch (err) {
       expect(err.message).toEqual('Unknown table "bananas"')
     }

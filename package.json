@@ -10,7 +10,8 @@
   "scripts": {
     "lint": "standard",
     "lint:fix": "standard --fix",
-    "test": "jest"
+    "test": "jest",
+    "posttest": "npm run lint"
   },
   "repository": {
     "type": "git",
@@ -20,13 +21,13 @@
   "author": "Nathan LaFreniere <quitlahok@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "front-matter": "^3.1.0",
+    "front-matter": "^4.0.2",
     "keyfob": "^2.0.1",
-    "pg-promise": "^8.5.4"
+    "pg-promise": "^10.10.2"
   },
   "devDependencies": {
-    "jest": "^24.9.0",
-    "standard": "^14.3.1"
+    "jest": "^27.0.6",
+    "standard": "^16.0.3"
   },
   "jest": {
     "collectCoverage": true,

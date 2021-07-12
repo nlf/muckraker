@@ -6,4 +6,3 @@ exports.transaction = {
 }
 
 exports.execute = (db) => db.users.find()
-

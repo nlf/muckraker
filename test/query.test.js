@@ -1,3 +1,4 @@
+/* eslint-env jest */
 'use strict'
 
 const Muckraker = require('../')
@@ -33,13 +34,13 @@ describe('#find()', () => {
   test('can return a property from a json column', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({}, ['id', ['blob', 'some', 'path']])
-    expect(query).toEqual(`SELECT "id","blob"#>>'{some,path}' AS "path" FROM "users"`)
+    expect(query).toEqual('SELECT "id","blob"#>>\'{some,path}\' AS "path" FROM "users"')
   })
 
   test('ignores json properties on columns that are not json', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({}, ['id', ['blob', 'some', 'path'], ['user_name', 'junk']])
-    expect(query).toEqual(`SELECT "id","blob"#>>'{some,path}' AS "path" FROM "users"`)
+    expect(query).toEqual('SELECT "id","blob"#>>\'{some,path}\' AS "path" FROM "users"')
   })
 
   test('defaults to adding a NOT NULL clause on "deleted_at" when column exists', async () => {
@@ -66,182 +67,182 @@ describe('#find()', () => {
     expect(query).toEqual(`SELECT ${db.entries._builder.getColumnNames()} FROM "entries" WHERE "deleted_at" IS NOT NULL`)
   })
 
-  test('allows overriding the default filter for tables with a deleted_at column by passing a date', async () =>  {
+  test('allows overriding the default filter for tables with a deleted_at column by passing a date', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.entries.find({ deleted_at: new Date() })
     const matcher = new RegExp(`SELECT ${db.entries._builder.getColumnNames()} FROM "entries" WHERE "deleted_at" = '[^']+'`)
     expect(query).toMatch(matcher)
   })
 
-  test('can compare a column to a json object', async () =>  {
+  test('can compare a column to a json object', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ id: { some: 'thing' } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "id" = '{"some":"thing"}'`)
   })
 
-  test('can find rows in a table with a condition', async () =>  {
+  test('can find rows in a table with a condition', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ id: 0, invalid: 'key' })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "id" = 0`)
   })
 
-  test('can find rows in a table with a condition in a json column', async () =>  {
+  test('can find rows in a table with a condition in a json column', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ blob: { test: 'object' } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "blob"#>>'{test}' = 'object'`)
   })
 
-  test('can find rows in a table with a column that is null', async () =>  {
+  test('can find rows in a table with a column that is null', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ unknown: null })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "unknown" IS NULL`)
   })
 
-  test('can find rows in a table with a json value that is null', async () =>  {
+  test('can find rows in a table with a json value that is null', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ blob: { some: null } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "blob"#>>'{some}' IS NULL`)
   })
 
-  test('can find rows in a table with a column that is explicitly null', async () =>  {
+  test('can find rows in a table with a column that is explicitly null', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ unknown: { $eq: null } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "unknown" IS NULL`)
   })
 
-  test('can find rows in a table with a json value that is explicitly null', async () =>  {
+  test('can find rows in a table with a json value that is explicitly null', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ blob: { some: { $eq: null } } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "blob"#>>'{some}' IS NULL`)
   })
 
-  test('can find rows in a table with a column that is not null', async () =>  {
+  test('can find rows in a table with a column that is not null', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ unknown: { $ne: null } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "unknown" IS NOT NULL`)
   })
 
-  test('can find rows in a table with a json value that is not null', async () =>  {
+  test('can find rows in a table with a json value that is not null', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ blob: { some: { $ne: null } } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "blob"#>>'{some}' IS NOT NULL`)
   })
 
-  test('can use the $gt operator', async () =>  {
+  test('can use the $gt operator', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ pets: { $gt: 1 } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "pets" > 1`)
   })
 
-  test('can use the $gt operator on a json column', async () =>  {
+  test('can use the $gt operator on a json column', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ blob: { some: { value: { $gt: 5 } } } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "blob"#>>'{some,value}' > 5`)
   })
 
-  test('can use the $gte operator', async () =>  {
+  test('can use the $gte operator', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ pets: { $gte: 1 } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "pets" >= 1`)
   })
 
-  test('can use the $gte operator on a json column', async () =>  {
+  test('can use the $gte operator on a json column', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ blob: { some: { value: { $gte: 5 } } } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "blob"#>>'{some,value}' >= 5`)
   })
 
-  test('can use the $lt operator', async () =>  {
+  test('can use the $lt operator', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ pets: { $lt: 1 } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "pets" < 1`)
   })
 
-  test('can use the $lt operator on a json column', async () =>  {
+  test('can use the $lt operator on a json column', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ blob: { some: { value: { $lt: 5 } } } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "blob"#>>'{some,value}' < 5`)
   })
 
-  test('can use the $lte operator', async () =>  {
+  test('can use the $lte operator', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ pets: { $lte: 1 } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "pets" <= 1`)
   })
 
-  test('can use the $lte operator on a json column', async () =>  {
+  test('can use the $lte operator on a json column', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ blob: { some: { value: { $lte: 5 } } } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "blob"#>>'{some,value}' <= 5`)
   })
 
-  test('can use the $ne operator', async () =>  {
+  test('can use the $ne operator', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ pets: { $ne: 1 } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "pets" != 1`)
   })
 
-  test('can use the $ne operator on a json column', async () =>  {
+  test('can use the $ne operator on a json column', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ blob: { some: { value: { $ne: 5 } } } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "blob"#>>'{some,value}' != 5`)
   })
 
-  test('can use the $eq operator', async () =>  {
+  test('can use the $eq operator', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ pets: { $eq: 1 } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "pets" = 1`)
   })
 
-  test('can use the $eq operator on a json column', async () =>  {
+  test('can use the $eq operator on a json column', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ blob: { some: { value: { $eq: 5 } } } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "blob"#>>'{some,value}' = 5`)
   })
 
-  test('can use the $in operator', async () =>  {
+  test('can use the $in operator', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ pets: { $in: [1, 2, 3] } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "pets" IN (1,2,3)`)
   })
 
-  test('can use the $in operator on a json column', async () =>  {
+  test('can use the $in operator on a json column', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ blob: { some: { value: { $in: [1, 2, 3] } } } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "blob"#>>'{some,value}' IN (1,2,3)`)
   })
 
-  test('can use the $nin operator', async () =>  {
+  test('can use the $nin operator', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ pets: { $nin: [1, 3] } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "pets" NOT IN (1,3)`)
   })
 
-  test('can use the $nin operator on a json column', async () =>  {
+  test('can use the $nin operator on a json column', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ blob: { some: { value: { $nin: [1, 2, 3] } } } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "blob"#>>'{some,value}' NOT IN (1,2,3)`)
   })
 
-  test('can use the $like operator', async () =>  {
+  test('can use the $like operator', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ user_name: { $like: 'test' } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "user_name" LIKE 'test'`)
   })
 
-  test('can use the $like operator on a json column', async () =>  {
+  test('can use the $like operator on a json column', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ blob: { some: { value: { $like: 'test' } } } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "blob"#>>'{some,value}' LIKE 'test'`)
   })
 
-  test('can use the $nlike operator', async () =>  {
+  test('can use the $nlike operator', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ user_name: { $nlike: 'test' } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "user_name" NOT LIKE 'test'`)
   })
 
-  test('can use the $nlike operator on a json column', async () =>  {
+  test('can use the $nlike operator on a json column', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.find({ blob: { some: { value: { $nlike: 'test' } } } })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "blob"#>>'{some,value}' NOT LIKE 'test'`)
@@ -249,13 +250,13 @@ describe('#find()', () => {
 })
 
 describe('#findOne()', () => {
-  test('can find a single row', async () =>  {
+  test('can find a single row', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.findOne()
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users"`)
   })
 
-  test('can find a single row with a condition', async () =>  {
+  test('can find a single row with a condition', async () => {
     const db = new Muckraker(getOptions())
     const query = await db.users.findOne({ id: 0 })
     expect(query).toEqual(`SELECT ${db.users._builder.getColumnNames()} FROM "users" WHERE "id" = 0`)
