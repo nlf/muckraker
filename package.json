@@ -23,7 +23,7 @@
   "dependencies": {
     "front-matter": "^4.0.2",
     "keyfob": "^2.0.1",
-    "pg-promise": "^10.10.2"
+    "pg-promise": "^12.0.0"
   },
   "devDependencies": {
     "jest": "^27.0.6",
